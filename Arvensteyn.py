@@ -2,8 +2,7 @@ from PyQt6.QtWidgets import QApplication, QProgressBar, QSystemTrayIcon, QMenu, 
 import sys  # Only needed for access to command line arguments
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
 
-from src.global_stylesheet import arvensteyn_style
-from src.PlayinCard import PlayinCard
+from src.PlayinCard import *
 
 #from src.desktop import Desktop
 #from src.ArvensteynMenu import Tray
@@ -32,8 +31,8 @@ def singleton():
 def main():
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
-    app.setStyleSheet(arvensteyn_style)
-    w = PlayinCard("Testfunktion", "subfunl")
+    #w = SubControls()
+    w = TestCard('Testfunkltionm')
     w.show()
 
 
