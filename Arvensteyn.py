@@ -32,7 +32,7 @@ def main():
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     #w = SubControls()
-    w = TestCard('Testfunkltionm')
+    w = PlayingCard('Testfunkltionm', 'testi', 'wolf', 'jukliane')
     w.show()
 
 
