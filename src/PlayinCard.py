@@ -145,8 +145,6 @@ class SubControls(QFrame):
         self.secondary_layout.addWidget(self.tertiary_widget1)
         self.secondary_layout.addWidget(self.tertiary_widget2)
 
-        top = QRectF()
-        self.setFrameShape(QFrame.rect())
 
 
 
