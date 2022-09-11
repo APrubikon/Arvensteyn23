@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg117"
+   inkscape:version="1.1.1 (c3084ef, 2021-09-22)"
+   sodipodi:docname="arve_blau_45a.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview119"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.30747568"
+     inkscape:cx="487.84347"
+     inkscape:cy="892.75354"
+     inkscape:window-width="1383"
+     inkscape:window-height="847"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g11" />
+  <defs
+     id="defs114">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath13">
+      <use
+         x="0"
+         y="0"
+         xlink:href="#g9"
+         id="use15"
+         width="100%"
+         height="100%" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g11"
+       clip-path="url(#clipPath13)"
+       style="display:inline"
+       transform="matrix(5.7234215,0,0,5.4211939,-339.43429,-82.787712)">
+      <g
+         inkscape:label="Clip"
+         id="g9">
+        <path
+           style="fill:#093a70;fill-opacity:0.45;stroke-width:0.0738373"
+           d="m 68.94294,65.981641 8.05081,-20.473308 h 4.233333 l -8.004033,20.446768 -4.28011,0.0266 c 0.0548,0.26466 0.0548,0.26466 0,0 z M 60.854167,55.5625 75.400048,17.761181 v 0 L 79.375,17.727083 94.45625,55.5625 H 89.958333 L 77.43557,24.181686 65.352083,55.5625 Z"
+           id="path1736"
+           sodipodi:nodetypes="cccccccccccccccc" />
+      </g>
+    </g>
+  </g>
+</svg>

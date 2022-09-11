@@ -202,7 +202,7 @@ def update_filepaths_anschreiben(newfp):
 #def check_new_filepath
 
 
-#update_filepaths('IIII-19-144', 'path/to/directory')
-print(currentConfig.getfilepaths(currentConfig()))
-currentConfig.getfilepathsdict(currentConfig())
-check_template_anschreiben('AaAa-19-144', 'path/to/directoryNjom')
+##update_filepaths('IIII-19-144', 'path/to/directory')
+#print(currentConfig.getfilepaths(currentConfig()))
+#currentConfig.getfilepathsdict(currentConfig())
+#check_template_anschreiben('AaAa-19-144', 'path/to/directoryNjom')
