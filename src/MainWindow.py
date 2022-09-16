@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QStackedWidget, QSizePolicy, QFrame, QVBoxLayout, QGridLayout, QSizePolicy, QStackedWidget, QHBoxLayout, QSpacerItem
+from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QStackedWidget, QSizePolicy, \
+    QFrame, QVBoxLayout, QGridLayout, QSizePolicy, QStackedWidget, QStackedLayout, QHBoxLayout, QSpacerItem
 from PyQt6.QtCore import Qt, QSize, QEvent, QRectF, QPropertyAnimation, pyqtProperty, QEasingCurve, \
     QVariant, QVariantAnimation, pyqtSlot, QEventLoop, QPoint, QAbstractAnimation, QParallelAnimationGroup
 from PyQt6.QtGui import QImage, QPalette, QBrush, QPainter, QColor, QPainterPath, QPen
@@ -6,10 +7,11 @@ import random
 import os
 from src.desktop import current
 from src.MainLayout import *
-
+from src.Testwidget1 import Testwidget1
+from src.Testwidget2 import Testwidget2
+from src.BaseInfo import BaseInfo
 
 basedir = os.path.dirname(__file__)
-
 
 
 class Pitch(QMainWindow):
@@ -24,9 +26,9 @@ class Pitch(QMainWindow):
         self.setWindowTitle("Arvensteyn")
         self.grass = QWidget()
         self.grass.setObjectName('green')
-        self.setCentralWidget(self.grass)
-        self.main_stack = SlidingStackedWidget()
 
+        self.main_stack = SlidingStackedWidget()
+        self.setCentralWidget(self.grass)
         # customwidgets to inherit
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
@@ -47,7 +49,6 @@ class Pitch(QMainWindow):
         self.baseinfo.setContentsMargins(40, 0, 0, 0)
         self.baseinfo.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-
         self.across1.addSpacerItem(self.spacerH)
 
         # create logo
@@ -58,58 +59,62 @@ class Pitch(QMainWindow):
         self.labellogo.setPixmap(logo)
         self.labellogo.installEventFilter(self)
 
+
         self.across1.addWidget(self.labellogo)
 
-       # self.topdown.addSpacerItem(self.spacerV)
+        # self.topdown.addSpacerItem(self.spacerV)
         self.setBaseInfo()
-        self.incorporate_stackedwidget()
-
-    def incorporate_stackedwidget(self):
-
+        self.center()
+        #      self.incorporate_stackedwidget()
+        #
+        #  def incorporate_stackedwidget(self):
+        #
         self.topdown.addWidget(self.main_stack)
-        #self.topdown.addSpacerItem(self.spacerV)
+
         self.stack_zero = Desktop()
-        # todo
-        #self.stack_mandanten =
-
-
+        for i in self.stack_zero.findChildren(ColorButton):
+            i.installEventFilter(self)
+        self.stack_one = BaseInfo()
         self.main_stack.addWidget(self.stack_zero)
+        self.main_stack.addWidget(self.stack_one)
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QtGui.QGuiApplication.primaryScreen().availableGeometry().center()
+
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
 
-        self.main_stack.setCurrentWidget(self.stack_zero)
-
-    @pyqtSlot(str)
-    def change_stack(self, page):
-        if page == 'Neuer Mandant':
-            print('queen dead')
-        self.main_stack.slideInIdx(0)
-
+#
     def setBaseInfo(self):
-        self.user_label  = ArveLabel('header', 'Rechtsanwalt Placeholder')
+
+        self.user_label = ArveLabel('header', 'Rechtsanwalt Placeholder')
         self.baseinfo.addWidget(self.user_label)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.MouseButtonPress:
             if self.labellogo is obj:
-                # todo connect to correct func
-                print(current)
-                #self.main_stack.slideInIdx(0)
+                self.main_stack.slideInIdx(0)
+            if isinstance(obj, ColorButton):
+                if obj.text() == 'Benutzer verwalten':
+                    self.main_stack.slideInIdx(1)
         return QWidget.eventFilter(self, obj, event)
-
 
 
 class SlidingStackedWidget(QStackedWidget):
     def __init__(self, parent=None):
         super(SlidingStackedWidget, self).__init__(parent)
 
-        self.m_direction = Qt.Orientation.Horizontal
-        self.m_speed = 300
-        self.m_animationType = QEasingCurve.Type.InBounce
+        self.m_direction = Qt.Orientation.Vertical
+        self.m_speed = 200
+        self.m_animationType = QEasingCurve.Type.InElastic
         self.m_now = 0
         self.m_next = 0
         self.m_wrap = False
         self.m_pnow = QPoint(0, 0)
         self.m_active = False
+
 
     def setDirection(self, direction):
         self.m_direction = direction
@@ -155,8 +160,7 @@ class SlidingStackedWidget(QStackedWidget):
             self.m_active = False
             return
 
-        offset_X, \
-        offset_Y = self.frameRect().width(), self.frameRect().height()
+        offset_X, offset_Y = self.frameRect().width(), self.frameRect().height()
         self.widget(_next).setGeometry(self.frameRect())
 
         if not self.m_direction == Qt.Orientation.Horizontal:
@@ -195,7 +199,7 @@ class SlidingStackedWidget(QStackedWidget):
         self.m_next = _next
         self.m_now = _now
         self.m_active = True
-        anim_group.start()
+        anim_group.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
 
     @pyqtSlot()
     def animationDoneSlot(self):
@@ -204,33 +208,34 @@ class SlidingStackedWidget(QStackedWidget):
         self.widget(self.m_now).move(self.m_pnow)
         self.m_active = False
 
+
 class Desktop(ArvenWidget):
     def __init__(self):
-        super(Desktop, self).__init__(framed = 'not')
+        super(Desktop, self).__init__(framed='not')
 
         self.desktopgrid = QGridLayout()
         self.desktopgrid.setContentsMargins(80, 80, 80, 80)
         self.desktopgrid.setSpacing(40)
         self.setLayout(self.desktopgrid)
-        #self.desktopgrid.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # self.desktopgrid.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        #pc Nr. 1
+        # pc Nr. 1
         self.aktenverwaltung = PlayingCard('Aktenverwaltung', 'Neuer Mandant', 'Mandanten verwalten', 'Auftrag Anlegen',
                                            'Aufträge verwalten')
-        #self.aktenverwaltung.secondaryWidget.a.clicked.connect(self.testsender)
+        # self.aktenverwaltung.secondaryWidget.a.clicked.connect(self.testsender)
         # PC Nr. 2
         self.leistungserfassung = PlayingCard('Leistungserfassung', 'Neue Leistung', 'Persönliche Auswertung')
 
-        #PC Nr. 3
+        # PC Nr. 3
         self.rechnungslauf = PlayingCard('Abrechnung', 'Rechnungslauf', 'Rechnungen erstellen', 'Offene Rechnungen')
 
-        #PC Nr. 4
-        self.einstellungen = PlayingCard('Einstellungen')
+        # PC Nr. 4
+        self.einstellungen = PlayingCard('Einstellungen', 'Benutzer verwalten')
 
-        #PC Nr. 5
+        # PC Nr. 5
         self.dokumente = PlayingCard('Dokument erstellen', 'Anschreiben', 'Telefonvermerk', 'Kurzgutachten')
 
-        #PC Nr. 6
+        # PC Nr. 6
         self.auswertungen = PlayingCard('Auswertung', 'Arbeitszeit', 'Umsätze')
 
         self.desktopgrid.addWidget(self.aktenverwaltung, 0, 0)
@@ -241,6 +246,8 @@ class Desktop(ArvenWidget):
         self.desktopgrid.addWidget(self.auswertungen, 1, 2)
 
         #
+
+
 class PlayingCard(QWidget):
     BorderColor = QColor(9, 58, 112, 255)
     BackgroundColor = QColor(255, 255, 255, 180)
@@ -265,7 +272,7 @@ class PlayingCard(QWidget):
         self.setLayout(self.base_layout)
         # self.base_layout.setContentsMargins(0, 10, 0, 0)
         self.base_button = QPushButton(Function)
-        basebutton_style = """color : rgb(9, 58, 112); border-width:0px; border-style:none; background-color:transparent; font:24pt bold;"""
+        basebutton_style = """color : rgb(9, 58, 112); border-width:0px; border-style:none; background-color:transparent; font-weight: bold; font: 24pt;"""
         self.base_button.setStyleSheet(basebutton_style)
         self.base_button.installEventFilter(self)
 
@@ -366,8 +373,9 @@ class SubControls(QWidget):
             self.a = ColorButton(i)
             self.a.setObjectName(i)
             self.secondary_layout.addWidget(self.a)
-            self.a.clicked.connect(lambda checked=False, a=i: Pitch.change_stack(Pitch(), a))
 
+            #self.a.clicked.connect(lambda checked=False, a=i: Pitch.change_stack(Pitch(), a))
+            #
 
 class HLine(QFrame):
     def __init__(self):
@@ -416,6 +424,3 @@ class ColorButton(QPushButton):
         self.text_color_animation.setEndValue(QColor(0, 0, 0, 0))
         self.text_color_animation.setDuration(3000)
         self.text_color_animation.start()
-
-
-

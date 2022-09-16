@@ -1,4 +1,6 @@
 import configparser
+import os
+basedir = os.path.dirname(__file__)
 
 
 # Add the structure to the file we will create
@@ -11,21 +13,54 @@ def definecfgFile():
     config.set('user_info', 'user_profession', '')
     config.set('user_info', 'user_id', '')
 
-    config.add_section('database-connection')
-    config.set('database-connection', 'host', '')
+    config.add_section('database_connection')
+    config.set('database_connection', 'host', '')
+    config.set('database_connection', 'database', '')
+    config.set('database_connection', 'user', '')
+    config.set('database_connection', 'pw', '')
 
-    config.add_section('used_data')
-    config.set('used_data', 'last_files', '')
+    config.add_section('used local data')
+    config.set('used local data', 'Az', '')
+    config.set('used local data', 'filepath', '')
+
 
     # Write the new structure to the new file
-    with open(r"/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini", 'w') as configfile:
+    with open(os.path.join(basedir, "configfile.ini"), 'w') as configfile:
         config.write(configfile)
+
+
+
+
 
 def add_filepaths():
     config = configparser.ConfigParser()
     config.set('used_data', 'filepaths', '')
     with open(r"/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini", 'w') as configfile:
         config.write(configfile)
+
+def db_anmeldung(host = '', database = '', user = '', pw = ''):
+    edit = configparser.ConfigParser()
+    edit.read(os.path.join(basedir, "configfile.ini"))
+
+
+    database_connection = edit["database_connection"]
+    database_connection['host'] = host
+    database_connection['database'] = database
+    database_connection['user'] = user
+    database_connection['pw'] = pw
+
+    with open(os.path.join(basedir, "configfile.ini"), 'w') as configfile:
+        edit.write(configfile)
+
+def getdbcreds():
+    content = configparser.ConfigParser()
+    content.read(os.path.join(basedir, "configfile.ini"))
+
+    db_info = content['database_connection']
+    creds = {'host' : db_info['host'], 'database' : db_info['database'], 'user' : db_info['user'], 'pw' : db_info['pw']}
+
+    return creds
+
 
 
 def Anmeldung(ID, Kopfzeile, Role, Profession):
@@ -199,10 +234,3 @@ def update_filepaths_anschreiben(newfp):
     with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini', 'w') as configfile:
         edit.write(configfile)
 
-#def check_new_filepath
-
-
-##update_filepaths('IIII-19-144', 'path/to/directory')
-#print(currentConfig.getfilepaths(currentConfig()))
-#currentConfig.getfilepathsdict(currentConfig())
-#check_template_anschreiben('AaAa-19-144', 'path/to/directoryNjom')

@@ -21,12 +21,13 @@ from PyQt6.QtWidgets import (QApplication,
                              QFrame
                              )
 from PyQt6.QtCore import Qt, QLocale
-
+import os
 import datetime
 
 today = datetime.datetime.today()
 today = today.strftime("%d.%m.%Y")
 
+basedir = os.path.dirname(__file__)
 from src.config import currentConfig as curr
 
 
@@ -42,13 +43,14 @@ class MainWindow(QWidget, curr):
 
         kopfzeile = f"""{self.Beruf} {self.Name}"""
         self.Kopfzeile.setText(kopfzeile)
-        self.Kopfzeile.setStyleSheet("font: bold;")
+        self.Kopfzeile.setStyleSheet("font-weight: bold;")
 
         self.setStyleSheet("background-color:white")
+        #todo svg
         pixmap = QtGui.QPixmap('/Users/Shared/PycharmProjects/arvensteynIII/gui/g2046-2.png')
         self.labelLogo.setPixmap(pixmap)
 
-        self.Arve = QtGui.QIcon("/Users/Shared/PycharmProjects/arvensteynIII/gui/g2045-3t.png")
+        self.Arve = QtGui.QIcon(os.path.join(basedir, "media/g2045-3t.png"))
         self.ButtonZurueck = ArvenButton('zurück')
         self.ButtonZurueck.setIcon(self.Arve)
         self.labelDatum.setText(today)
@@ -95,7 +97,7 @@ class ArvenButton(QPushButton):
     def setupbt(self, Text):
         self.setFlat(False)
         self.setText(Text)
-        self.Arve = QtGui.QIcon("/Users/Shared/PycharmProjects/arvensteynIII/gui/g2045-3t.png")
+        self.Arve = QtGui.QIcon(os.path.join(basedir, "media/g2045-3t.png"))
         self.setIcon(self.Arve)
         self.setGeometry(200, 100, 60, 35)
 
@@ -157,7 +159,7 @@ class ArveLabel(QLabel):
 
     def setFontStyle(self, stylus):
         if stylus == 'header':
-            Stylesheet = """background-color: rgb(255,255,255); font: bold;"""
+            Stylesheet = """background-color: rgb(255,255,255); font-weight: bold;"""
             self.setStyleSheet(Stylesheet)
         elif stylus == 'notice':
             Stylesheet = """background-color: rgb(255,255,255);"""

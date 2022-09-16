@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from src.MainWindow import *
 
 from src.ArvensteynMenu import Tray
+from src.config import definecfgFile
 #
 # from src.EditMdt import EditMdt
 # from src.InputHumans import Human
@@ -36,6 +37,7 @@ def main():
 
     modul_trayII = Tray()
     modul_trayII.show()
+    definecfgFile()
 
 
 
