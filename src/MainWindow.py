@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QLabel, QFrame, Q
 from PyQt6.QtCore import Qt, QSize, QEvent, QRectF, QPropertyAnimation, pyqtProperty, QEasingCurve, \
     QVariant, QVariantAnimation, pyqtSlot, QEventLoop, QPoint, QAbstractAnimation, QParallelAnimationGroup
 from PyQt6.QtGui import QImage, QPalette, QBrush, QPainter, QColor, QPainterPath, QPen
+from src.config import get_headline
 import random
 import os
 from src.desktop import current
@@ -59,16 +60,11 @@ class Pitch(QMainWindow):
         self.labellogo.setPixmap(logo)
         self.labellogo.installEventFilter(self)
 
-
         self.across1.addWidget(self.labellogo)
 
-        # self.topdown.addSpacerItem(self.spacerV)
         self.setBaseInfo()
         self.center()
-        #      self.incorporate_stackedwidget()
-        #
-        #  def incorporate_stackedwidget(self):
-        #
+
         self.topdown.addWidget(self.main_stack)
 
         self.stack_zero = Desktop()
@@ -86,10 +82,10 @@ class Pitch(QMainWindow):
         self.move(qr.topLeft())
 
 
-#
-    def setBaseInfo(self):
 
-        self.user_label = ArveLabel('header', 'Rechtsanwalt Placeholder')
+
+    def setBaseInfo(self):
+        self.user_label = ArveLabel('header', get_headline())
         self.baseinfo.addWidget(self.user_label)
 
     def eventFilter(self, obj, event):

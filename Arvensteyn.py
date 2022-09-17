@@ -37,7 +37,7 @@ def main():
 
     modul_trayII = Tray()
     modul_trayII.show()
-    definecfgFile()
+
 
 
 

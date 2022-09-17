@@ -1,5 +1,6 @@
 import configparser
 import os
+
 basedir = os.path.dirname(__file__)
 
 
@@ -23,13 +24,9 @@ def definecfgFile():
     config.set('used local data', 'Az', '')
     config.set('used local data', 'filepath', '')
 
-
     # Write the new structure to the new file
     with open(os.path.join(basedir, "configfile.ini"), 'w') as configfile:
         config.write(configfile)
-
-
-
 
 
 def add_filepaths():
@@ -38,10 +35,10 @@ def add_filepaths():
     with open(r"/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini", 'w') as configfile:
         config.write(configfile)
 
-def db_anmeldung(host = '', database = '', user = '', pw = ''):
+
+def db_anmeldung(host='', database='', user='', pw=''):
     edit = configparser.ConfigParser()
     edit.read(os.path.join(basedir, "configfile.ini"))
-
 
     database_connection = edit["database_connection"]
     database_connection['host'] = host
@@ -52,14 +49,37 @@ def db_anmeldung(host = '', database = '', user = '', pw = ''):
     with open(os.path.join(basedir, "configfile.ini"), 'w') as configfile:
         edit.write(configfile)
 
+
 def getdbcreds():
     content = configparser.ConfigParser()
     content.read(os.path.join(basedir, "configfile.ini"))
 
     db_info = content['database_connection']
-    creds = {'host' : db_info['host'], 'database' : db_info['database'], 'user' : db_info['user'], 'pw' : db_info['pw']}
+    creds = {'host': db_info['host'], 'database': db_info['database'], 'user': db_info['user'], 'pw': db_info['pw']}
 
     return creds
+
+
+def initialcheck():
+    content = configparser.ConfigParser()
+    content.read(os.path.join(basedir, "configfile.ini"))
+
+    db_info = content['database_connection']
+    dbcheck = db_info['database']
+    return dbcheck
+
+def get_headline():
+    content = configparser.ConfigParser()
+    content.read(os.path.join(basedir, "configfile.ini"))
+
+    headline_info = content['user_info']
+    headline1 = headline_info['user_profession']
+    headline2 = headline_info['mitglied']
+    headline = f"""{headline1} {headline2}"""
+    return headline
+
+
+
 
 
 
@@ -84,6 +104,7 @@ def Anmeldung(ID, Kopfzeile, Role, Profession):
         pass
     currentConfig.getcurrent_ra(self=currentConfig())
 
+
 def update_filepaths(az, filepath):
     # update config.ini (= string)
     edit = configparser.ConfigParser()
@@ -101,6 +122,7 @@ def update_filepaths(az, filepath):
             edit.write(configfile)
     else:
         pass
+
 
 class currentConfig():
     def __init__(self):
@@ -159,10 +181,10 @@ class currentConfig():
         # fetch content of config.ini, output dict.
 
         self.filepaths = self.getfilepaths()
-        print(self.filepaths) # string
+        print(self.filepaths)  # string
         if self.filepaths != '':
             self.lexikon_list = [str(x) for x in self.filepaths.split(", ")]
-            self.lexikon_t = tuple(self.lexikon_list)# tuple
+            self.lexikon_t = tuple(self.lexikon_list)  # tuple
             self.list = []
             for i in self.lexikon_list:
                 element = tuple(i.split(" : "))
@@ -174,7 +196,6 @@ class currentConfig():
             self.lexikon = {}  # empty dict.
         print(self.lexikon)
         return self.lexikon
-
 
 
 def last_files_update(most_current):
@@ -206,12 +227,13 @@ def last_files_update(most_current):
         with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini', 'w') as configfile:
             edit.write(configfile)
 
+
 def check_template_anschreiben(az, filepath):
     lexikon = currentConfig.getfilepathsdict(self=currentConfig())
 
     if az in lexikon.keys():
         if filepath == lexikon.__getitem__(az):
-            pass          # wait for click on 'neues Dokument erstellen
+            pass  # wait for click on 'neues Dokument erstellen
         else:
             pre_lexikon = currentConfig.getfilepaths(self=currentConfig())
             print(lexikon.__getitem__(az))
@@ -223,7 +245,6 @@ def check_template_anschreiben(az, filepath):
         update_filepaths_anschreiben(new_lexikon)
 
 
-
 def update_filepaths_anschreiben(newfp):
     edit = configparser.ConfigParser()
     edit.read("/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini")
@@ -233,4 +254,3 @@ def update_filepaths_anschreiben(newfp):
         data_section["filepaths"] = newfp
     with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini', 'w') as configfile:
         edit.write(configfile)
-
