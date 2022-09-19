@@ -1,8 +1,10 @@
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout
-
+from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QCompleter
+import nacl.pwhash
+from PyQt6 import QtCore
 from src.MainLayout import *
 from src.config import db_anmeldung, getdbcreds, initialcheck, get_headline
 from src.db import dbopen
+from src.data import MitarbeiterCred
 
 
 
@@ -155,6 +157,11 @@ class Login(ArvenWidget):
         self.password1.textChanged.connect(self.passwordident)
         self.password2.setClearButtonEnabled(True)
         self.password2.setEchoMode(QLineEdit.EchoMode.Password)
+        self.completer = QCompleter()
+        self.completer.setModel(MitarbeiterCred())
+        self.completer.setCompletionColumn(1)
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
+        self.username.setCompleter(self.completer)
 
         self.passwordstatus = ArveLabel('notice', '')
         self.login_click = ArvenButton('Arvensteyn Login')
@@ -170,7 +177,28 @@ class Login(ArvenWidget):
         #self.setData()
 
     def login(self):
-        pass
+        MitarbeiterCred.checkKey(MitarbeiterCred(), self.username.text())
+        print(MitarbeiterCred.checkpass(MitarbeiterCred(), self.username.text(), self.password1.text()))
+        #    self.close()
+        #else:
+        #    self.passwordstatus.setText("Falsche Logindaten")
+        #
+
+    def encryptpw(self):
+        orig_password = self.password1.text().encode('utf-8')
+
+        # Hashing the password
+        hashed_data = nacl.pwhash.str(orig_password)
+
+        # The result will be True on password match.
+        res = nacl.pwhash.verify(hashed_data, orig_password)
+        print(res)
+       
+        # On mismatch an exception will be raised
+       # wrong_password = b'My password'
+       # res2 = nacl.pwhash.verify(hashed_data, wrong_password)
+
+
 
 
 

@@ -85,7 +85,7 @@ def get_headline():
 
 def Anmeldung(ID, Kopfzeile, Role, Profession):
     edit = configparser.ConfigParser()
-    edit.read("/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini")
+    edit.read(os.path.join(basedir, "configfile.ini"))
 
     ID = str(ID)
 
@@ -98,11 +98,11 @@ def Anmeldung(ID, Kopfzeile, Role, Profession):
     Benutzerinfo["user_id"] = ID
 
     if not Benutzerinfo == '':
-        with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini', 'w') as configfile:
+        with open(os.path.join(basedir, "configfile.ini"), 'w') as configfile:
             edit.write(configfile)
     else:
         pass
-    currentConfig.getcurrent_ra(self=currentConfig())
+    print('plz check')
 
 
 def update_filepaths(az, filepath):
@@ -252,5 +252,5 @@ def update_filepaths_anschreiben(newfp):
     data_section = edit["used_data"]
     if newfp != '':
         data_section["filepaths"] = newfp
-    with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini', 'w') as configfile:
+    with open('/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini') as configfile:
         edit.write(configfile)

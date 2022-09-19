@@ -31,7 +31,7 @@ def main():
     app = QApplication(sys.argv)
     w = Pitch()
     w.showMaximized()
-    app.setQuitOnLastWindowClosed(False)
+    #app.setQuitOnLastWindowClosed(False)
 
     QLocale.setDefault(QLocale(QLocale.Language.German))
 

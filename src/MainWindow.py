@@ -11,6 +11,9 @@ from src.MainLayout import *
 from src.Testwidget1 import Testwidget1
 from src.Testwidget2 import Testwidget2
 from src.BaseInfo import BaseInfo
+from src.EditMdt import EditMdt
+from src.variables import today
+from src.auftraege import MainFrameAuftraege
 
 basedir = os.path.dirname(__file__)
 
@@ -54,8 +57,8 @@ class Pitch(QMainWindow):
 
         # create logo
         self.labellogo = QLabel()
-        logo = QtGui.QPixmap(os.path.join(basedir, "media/g2045-2test.png"))
-        logo = logo.scaled(509, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        logo = QtGui.QPixmap(os.path.join(basedir, "media/Arvensteyn_Logo.svg"))
+       # logo = logo.scaled(509, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
         self.labellogo.setPixmap(logo)
         self.labellogo.installEventFilter(self)
@@ -71,8 +74,12 @@ class Pitch(QMainWindow):
         for i in self.stack_zero.findChildren(ColorButton):
             i.installEventFilter(self)
         self.stack_one = BaseInfo()
+        self.stack_two = EditMdt()
+        self.stack_three = MainFrameAuftraege()
         self.main_stack.addWidget(self.stack_zero)
         self.main_stack.addWidget(self.stack_one)
+        self.main_stack.addWidget(self.stack_two)
+        self.main_stack.addWidget(self.stack_three)
 
     def center(self):
         qr = self.frameGeometry()
@@ -87,15 +94,35 @@ class Pitch(QMainWindow):
     def setBaseInfo(self):
         self.user_label = ArveLabel('header', get_headline())
         self.baseinfo.addWidget(self.user_label)
+        self.datum = ArveLabel('notice', today)
+        self.baseinfo.addWidget(self.datum)
 
     def eventFilter(self, obj, event):
+       # switchboard = {'Mandanten verwalten' : EditMdt()}
+
         if event.type() == QEvent.Type.MouseButtonPress:
             if self.labellogo is obj:
                 self.main_stack.slideInIdx(0)
+                self.user_label.setText(get_headline())
             if isinstance(obj, ColorButton):
                 if obj.text() == 'Benutzer verwalten':
                     self.main_stack.slideInIdx(1)
+                if obj.text() == 'Mandanten verwalten':
+                    self.main_stack.slideInIdx(2)
+                    self.actualizeDB()
+                if obj.text() == 'Aufträge verwalten':
+                    self.main_stack.slideInIdx(3)
+               #else:
+               #    self.new = switchboard.get[obj.text()]
+               #    self.main_stack.slideInWgt(self.new)
         return QWidget.eventFilter(self, obj, event)
+
+    def actualizeDB(self):
+        #print(self.main_stack.widget(2).dumpObjectTree())
+        self.stack_two.search_model.__init__()
+        print(self.stack_two.search_model.query().lastQuery())
+        #for i in self.main_stack.widget(2).children():
+        #    print(i)
 
 
 class SlidingStackedWidget(QStackedWidget):
