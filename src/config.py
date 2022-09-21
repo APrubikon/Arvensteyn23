@@ -145,7 +145,7 @@ class currentConfig():
 
     def getcurrent_ra(self):
         self.content = configparser.ConfigParser()
-        self.content.read("/Users/Shared/PycharmProjects/arvensteynIII/configfile.ini")
+        self.content.read(os.path.join(basedir, "configfile.ini"))
 
         self.user_info = self.content["user_info"]
         self.user_id = self.user_info["user_id"]

@@ -14,6 +14,7 @@ from src.BaseInfo import BaseInfo
 from src.EditMdt import EditMdt
 from src.variables import today
 from src.auftraege import MainFrameAuftraege
+from src.Timesheet import Timeframe
 
 basedir = os.path.dirname(__file__)
 
@@ -74,12 +75,10 @@ class Pitch(QMainWindow):
         for i in self.stack_zero.findChildren(ColorButton):
             i.installEventFilter(self)
         self.stack_one = BaseInfo()
-        self.stack_two = EditMdt()
-        self.stack_three = MainFrameAuftraege()
+
         self.main_stack.addWidget(self.stack_zero)
         self.main_stack.addWidget(self.stack_one)
-        self.main_stack.addWidget(self.stack_two)
-        self.main_stack.addWidget(self.stack_three)
+
 
     def center(self):
         qr = self.frameGeometry()
@@ -102,27 +101,45 @@ class Pitch(QMainWindow):
 
         if event.type() == QEvent.Type.MouseButtonPress:
             if self.labellogo is obj:
-                self.main_stack.slideInIdx(0)
-                self.user_label.setText(get_headline())
+                if self.main_stack.currentIndex() == 0:
+                    pass
+                elif self.main_stack.currentIndex() == 1:
+                    self.main_stack.slideInIdx(0)
+                else:
+                    self.old = self.main_stack.currentWidget()
+                    print(self.old)
+                    self.main_stack.removeWidget(self.old)
+                    self.old.deleteLater()
+                    self.main_stack.slideInIdx(0)
+                    self.user_label.setText(get_headline())
+
             if isinstance(obj, ColorButton):
                 if obj.text() == 'Benutzer verwalten':
-                    self.main_stack.slideInIdx(1)
+                    idx = self.main_stack.indexOf(self.stack_one)
+                    self.main_stack.slideInIdx(idx)
+
                 if obj.text() == 'Mandanten verwalten':
-                    self.main_stack.slideInIdx(2)
-                    self.actualizeDB()
+                    self.new = EditMdt()
+                    self.main_stack.addWidget(self.new)
+                    idx = self.main_stack.indexOf(self.new)
+                    self.main_stack.slideInIdx(idx)
+
                 if obj.text() == 'Aufträge verwalten':
-                    self.main_stack.slideInIdx(3)
-               #else:
-               #    self.new = switchboard.get[obj.text()]
-               #    self.main_stack.slideInWgt(self.new)
+                    self.new = MainFrameAuftraege()
+                    self.main_stack.addWidget(self.new)
+                    idx = self.main_stack.indexOf(self.new)
+                    self.main_stack.slideInIdx(idx)
+
+                if obj.text() == 'Neue Leistung':
+                    self.new = Timeframe()
+                    self.main_stack.addWidget(self.new)
+                    idx = self.main_stack.indexOf(self.new)
+                    self.main_stack.slideInIdx(idx)
+
+
         return QWidget.eventFilter(self, obj, event)
 
-    def actualizeDB(self):
-        #print(self.main_stack.widget(2).dumpObjectTree())
-        self.stack_two.search_model.__init__()
-        print(self.stack_two.search_model.query().lastQuery())
-        #for i in self.main_stack.widget(2).children():
-        #    print(i)
+
 
 
 class SlidingStackedWidget(QStackedWidget):

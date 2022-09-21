@@ -2,11 +2,11 @@
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6 import QtCore
-from PyQt6.QtCore import pyqtSlot, QModelIndex, pyqtSignal, Qt
-#from src.QuickConnect import quickconnect
-#from src.data import MostRecentFiles
-#from src.desktop import Desktop
-#from src.Dokumente import DokumenteCentral
+from PyQt6.QtCore import pyqtSlot, Qt
+from src.data import MostRecentFiles
+from src.MainWindow import Pitch
+from src.Timesheet import Timeframe
+from src.NewEntry import NewTimeEntry
 
 class Tray(QSystemTrayIcon):
     def __init__(self):
@@ -19,27 +19,25 @@ class Tray(QSystemTrayIcon):
         # Create the menu
         self.Main_Menu = QMenu()
         self.MainMenu1 = QMenu("Zeiterfassung")
-        self.MainMenu2 = QAction("Aktenverwaltung")
-        self.MainMenu3 = QAction("Arvensteyn Desktop")
+        self.MainMenu3 = QAction("Arvensteyn öffnen")
         self.MainMenu4 = QMenu("Neues Dokument erstellen")
         self.MainMenu5 = QAction("Quit")
 
-        #self.MainMenu4.triggered.connect(self.Login)
         self.MainMenu5.triggered.connect(self.quit)
-        self.MainMenu3.triggered.connect(self.Desktop)
+        self.MainMenu3.triggered.connect(self.maximize)
 
-        # Populate Zeiterfassunv mit früheren Eintrögen
-        #self.list = MostRecentFiles()
+        # Populate Zeiterfassung mit früheren Eintrögen
+        self.list = MostRecentFiles()
         self.indexlist = []
 
-        #for i in range(self.list.rowCount()):
-        #    az = self.list.index(i, 1)
-        #    self.indexlist.append(az)
+        for i in range(self.list.rowCount()):
+            az = self.list.index(i, 1)
+            self.indexlist.append(az)
 
        # dynamic population of Menu with previously used filenumbers
         for item in self.indexlist:
             timesheet = self.MainMenu1.addAction(item.data(Qt.ItemDataRole.DisplayRole))
-            #timesheet.triggered.connect(lambda triggered, a=item : self.quickOpen(a))
+            timesheet.triggered.connect(lambda triggered, a=item : self.quickOpen(a))
 
         # populate Auswahl von Dokumenten
         self.anschreiben = self.MainMenu4.addAction("Anschreiben")
@@ -54,7 +52,6 @@ class Tray(QSystemTrayIcon):
 
         self.setContextMenu(self.Main_Menu)
         self.Main_Menu.addMenu(self.MainMenu1)
-        self.Main_Menu.addAction(self.MainMenu2)
         self.Main_Menu.addAction(self.MainMenu3)
         self.Main_Menu.addMenu(self.MainMenu4)
         self.Main_Menu.addAction(self.MainMenu5)
@@ -63,18 +60,19 @@ class Tray(QSystemTrayIcon):
 
     @pyqtSlot(QtCore.QModelIndex)
     def quickOpen(self, item):
-        #quickconnect(item)
-        pass
+        if Timeframe.openPrevTimeSheet(Timeframe(), item):
+            app = QApplication.topLevelWidgets()
+            print(app)
+            for a in app:
+                if isinstance(a, NewTimeEntry):
+                    print(a)
+                    a.showMaximized()
 
-    def Desktop(self):
-       # desktop = Desktop()
-        #desktop.showMaximized()
-        #desktop.setFocus()
-        pass
+
 
     def quit(self):
         app = QApplication.instance()
-        print("outta here finally")
+        print("exit gracefully")
         app.quit()
 
     def anschreiben_neu(self):
@@ -99,3 +97,10 @@ class Tray(QSystemTrayIcon):
         #dokumente.showMaximized()
         #dokumente.setFocus()
         pass
+
+
+    def maximize(self):
+        app = QApplication.topLevelWidgets()
+        for a in app:
+            if isinstance(a, Pitch):
+                a.showMaximized()

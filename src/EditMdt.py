@@ -112,7 +112,7 @@ class EditMdt(ArvenWidget):
 
         # must be last line of constructor
         self.scrollSpace.setWidget(self.scrollWidget)
-        print(self.children())
+
 
 
     def add_mapping(self):
@@ -442,6 +442,12 @@ class EditMdt(ArvenWidget):
                 self.block_f.Rahmenvertrag.setChecked(True)
             else:
                 self.block_f.Rahmenvertrag.setChecked(False)
+
+    def refreshmodels(self):
+        self.mappermodel_mdt.select()
+        self.search_model = MandantListe()
+        self.mappermodel_gv.select()
+        self.mappermodel_re.select()
 
 class GrundDaten(QWidget):
     def __init__(self):

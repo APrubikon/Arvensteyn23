@@ -15,7 +15,7 @@ from datetime import date
 today_date = date.today()
 Jahr = today_date.strftime("%y")
 
-from src.data import DBModelMdt, DBModelAuftraege, Auftragsauswahl, Gerichte
+from src.data import DBModelMdt, DBModelAuftraege, Auftragsauswahl, Gerichte, AuftragsauswahlNr
 
 kollisionen = {"Kollisionsprüfung durch verantwortlichen Partner ergebnislos" : 1,
                "Strategische Kollision mit Bestandsmandat, Klärung mit verantwortlichen Partnern vor Annahme erfolgt" : 2,
@@ -93,12 +93,12 @@ class SearchfieldAuftraege(ArvenWidget):
     def searchModeSelect(self):
         if self.searchMode2.isChecked():
             self.search_line.clear()
-            self.search_line.setPlaceholderText("Mandant nach Nummer auswählen")
+            self.search_line.setPlaceholderText("Mandant nach Nummer auswählen (vierstellig)")
             limit = QRegularExpression("[0-9]*")
             limiter = QRegularExpressionValidator(limit)
             self.search_line.setValidator(limiter)
-            self.search_line.setCompleter(self.completer)
-            self.completer.setCompletionColumn(0)
+            self.search_line.returnPressed.connect(self.auftragsliste_num)
+
 
         else:
             self.search_line.clear()
@@ -111,7 +111,7 @@ class SearchfieldAuftraege(ArvenWidget):
     def indexmap(self, index):
         self.MdtNrInt:int = index.sibling(index.row(), 0).data()
         self.MdtName:str = index.sibling(index.row(), 1).data()
-        self.Auftragsliste(self.MdtName)
+        self.auftragsliste(self.MdtName)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def indexmap_2(self, index):
@@ -125,7 +125,7 @@ class SearchfieldAuftraege(ArvenWidget):
         print(DBModelAuftraege.lastError(DBModelAuftraege()).text())
 
 
-    def Auftragsliste(self, MdtName:str):
+    def auftragsliste(self, MdtName:str):
         model = Auftragsauswahl(MdtName)
         self.ergebnisListe.setModel(model)
         self.ergebnisListe.verticalHeader().hide()
@@ -137,6 +137,22 @@ class SearchfieldAuftraege(ArvenWidget):
         self.ergebnisListe.setColumnHidden(2, True)
         self.ergebnisListe.setColumnHidden(3, True)
         self.ergebnisListe.setColumnHidden(4, True)
+
+    def auftragsliste_num(self):
+        MdtNr = self.search_line.text()
+        print(MdtNr)
+        model = AuftragsauswahlNr(MdtNr)
+        self.ergebnisListe.setModel(model)
+        self.ergebnisListe.verticalHeader().hide()
+        self.ergebnisListe.horizontalHeader().setStretchLastSection(True)
+        self.ergebnisListe.horizontalHeader().hide()
+
+        self.ergebnisListe.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.ergebnisListe.resizeRowsToContents()
+        self.ergebnisListe.setColumnHidden(2, True)
+        self.ergebnisListe.setColumnHidden(3, True)
+        self.ergebnisListe.setColumnHidden(4, True)
+
 
 
 class DatenAuftraege(ArvenWidget):

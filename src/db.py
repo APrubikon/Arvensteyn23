@@ -8,7 +8,6 @@ from src.config import getdbcreds
 
 def dbopen():
     creds = getdbcreds()
-    print(creds)
 
     db = QSqlDatabase.addDatabase('QPSQL')
 
@@ -28,3 +27,6 @@ def dbopen():
         )
     else:
         return db
+
+
+

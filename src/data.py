@@ -103,7 +103,7 @@ class MandantEditmodel(QSqlRelationalTableModel):
 
 
 class GV_model(QSqlTableModel):
-    def __init__(self, gv_index):
+    def __init__(self, gv_index ='NULL'):
         super(GV_model, self).__init__()
 
         self.setTable("arvensteyn_dev22.humans")
@@ -117,7 +117,7 @@ class GV_model(QSqlTableModel):
 
 
 class REE_model(QSqlTableModel):
-    def __init__(self, re_index):
+    def __init__(self, re_index ='NULL'):
         super(REE_model, self).__init__()
 
         self.setTable("arvensteyn_dev22.humans")
@@ -221,6 +221,21 @@ class Auftragsauswahl(QSqlQueryModel):
                           arvensteyn_dev22.auftraege.mdt AND arvensteyn_dev22.mandanten.name = '{MdtName}'""")
         self.setQuery(query)
 
+
+class AuftragsauswahlNr(QSqlQueryModel):
+    def __init__(self, MdtNr):
+        super(AuftragsauswahlNr, self).__init__()
+
+        query = QSqlQuery(f"""SELECT                                                                             
+                          arvensteyn_dev22.auftraege.az, arvensteyn_dev22.auftraege.auftragsbezeichnung,         
+                          arvensteyn_dev22.auftraege.auftragsjahr, arvensteyn_dev22.mandanten.name,              
+                          arvensteyn_dev22.auftraege.id                                                          
+                          FROM                                                                                   
+                          arvensteyn_dev22.auftraege                                                             
+                          INNER JOIN arvensteyn_dev22.mandanten ON arvensteyn_dev22.mandanten.mandantid =        
+                          arvensteyn_dev22.auftraege.mdt AND arvensteyn_dev22.mandanten.mdt_id_lz = '{MdtNr}'""")
+        self.setQuery(query)
+
 class Gerichte(QSqlTableModel):
     def __init__(self):
         super(Gerichte, self).__init__()
@@ -228,3 +243,130 @@ class Gerichte(QSqlTableModel):
         self.select()
         if not self.select() == True:
             print(f"""{self.lastError().text()}""")
+
+class Leistungen(QSqlRelationalTableModel):
+    def __init__(self):
+        super(Leistungen, self).__init__()
+
+        self.setTable("arvensteyn_dev22.leistungen")
+        self.setJoinMode(QSqlRelationalTableModel.JoinMode.InnerJoin)
+        self.setEditStrategy(QSqlRelationalTableModel.EditStrategy.OnFieldChange)
+        self.setRelation(12, QSqlRelation("arvensteyn_dev22.auftraege", "id", "az"))
+        # self.setRelation(2, QSqlRelation("arvensteyn_dev22.mandanten", "mandantid", "name"))
+        self.setRelation(1, QSqlRelation("arvensteyn_dev22.mitglieder", "mitgliedernr", "mitglied"))
+        self.select()
+
+    def leistungserfassung(self, file: int, ra: int, lbeschreibung: str, duration: int, abrb: bool, l_datum: str,
+                           stamp: str):
+        if abrb == 0:
+            abrb = False
+        elif abrb == 1:
+            abrb = True
+        self.neue_leistung = self.record()
+        self.neue_leistung.setGenerated(0, False)
+        self.neue_leistung.setValue(1, ra)
+        self.neue_leistung.setValue(2, lbeschreibung)
+        self.neue_leistung.setValue(4, duration)
+        self.neue_leistung.setValue(5, l_datum)
+        self.neue_leistung.setValue(8, stamp)
+        self.neue_leistung.setValue(12, file)
+        self.neue_leistung.setValue(13, abrb)
+        if not self.insertRecord(-1, self.neue_leistung):
+            print(self.lastError().text())
+
+    def ra_filter(self, file):
+        filter = f"""auftrag = {file} AND ra = {self.ra}"""
+        self.setFilter(filter)
+        print(self.lastError().text())
+
+class PreviousEntriesFileProxy(QSortFilterProxyModel):
+    def __init__(self, file):
+        super(PreviousEntriesFileProxy, self).__init__()
+        self.setSourceModel(Leistungen())
+
+        filter = f"""{file}"""
+
+        self.setFilterKeyColumn(13)
+
+        self.setFilterFixedString(filter)
+
+
+class MostRecentFiles(QSqlQueryModel):
+    def __init__(self):
+        super(MostRecentFiles, self).__init__()
+        self.ra = currentConfig.getcurrent_ra(self=currentConfig())
+
+        query = QSqlQuery(f"""select
+                          arvensteyn_dev22.auftraege.id, arvensteyn_dev22.auftraege.az,
+                          arvensteyn_dev22.mandanten.name, arvensteyn_dev22.auftraege.auftragsbezeichnung   
+                          from 
+                          arvensteyn_dev22.auftraege
+                          inner join arvensteyn_dev22.leistungen ON arvensteyn_dev22.leistungen.auftrag = 
+                          arvensteyn_dev22.auftraege.id AND arvensteyn_dev22.leistungen.ra = {self.ra}
+                          inner join arvensteyn_dev22.mandanten ON arvensteyn_dev22.auftraege.mdt = 
+                          arvensteyn_dev22.mandanten.mandantid
+                          group by arvensteyn_dev22.auftraege.id, arvensteyn_dev22.mandanten.name LIMIT 10""")
+
+        print(self.ra)
+        self.setQuery(query)
+        print(self.lastError().text())
+
+
+editables = {1: (
+"UPDATE arvensteyn_dev22.auftraege SET auftragsbezeichnung = '{}' WHERE arvensteyn_dev22.auftraege.id = '{}'", 4),
+             6: (" UPDATE arvensteyn_dev22.auftraege SET mdt = '{}' WHERE arvensteyn_dev22.auftraege.id = '{}'", 4)}
+
+query = f"""SELECT
+                          arvensteyn_dev22.auftraege.az, arvensteyn_dev22.auftraege.rvg, arvensteyn_dev22.auftraege.auftragsbezeichnung, 
+                          arvensteyn_dev22.auftraege.auftragsjahr, arvensteyn_dev22.mandanten.name, 
+                          arvensteyn_dev22.auftraege.id, arvensteyn_dev22.auftraege.mdt
+                          FROM 
+                          arvensteyn_dev22.auftraege
+                          INNER JOIN arvensteyn_dev22.mandanten ON arvensteyn_dev22.mandanten.mandantid = 
+                          arvensteyn_dev22.auftraege.mdt AND arvensteyn_dev22.mandanten.name = 'Abbas Nasrallah'"""
+
+
+## todo revise whole odel
+class LeistungenTableModel(QSqlRelationalTableModel):
+    # source : https://stackoverflow.com/questions/49752388/editable-qtableview-of-complex-sql-query
+    def __init__(self, *args, **kwargs):
+        super(QSqlRelationalTableModel, self).__init__(*args, **kwargs)
+        self.booleanSet = [9, 10, 13]  # columns with checkboxes
+        self.setTable("arvensteyn_dev22.leistungen")
+        self.setRelation(3, QSqlRelation("arvensteyn_dev22.partner", "partnerid", "name"))
+
+        self.setEditStrategy(QSqlRelationalTableModel.EditStrategy.OnFieldChange)
+        self.select()
+
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.ItemFlag.NoItemFlags
+        if index.column() in self.booleanSet:
+            fl = QSqlRelationalTableModel.flags(self, index)
+            fl |= Qt.ItemFlag.ItemIsUserCheckable
+            return fl
+        else:
+            return QSqlRelationalTableModel.flags(self, index)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        value = QSqlRelationalTableModel.data(self, index)
+        if role == Qt.ItemDataRole.CheckStateRole:
+            if index.column() in self.booleanSet:
+                return Qt.CheckState.Unchecked if value == 0 else Qt.CheckState.Checked
+            else:
+                return QVariant()
+        return QSqlRelationalTableModel.data(self, index, role)
+
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+        if not index.isValid():
+            return False
+        if index.column() in self.booleanSet:
+            if role == Qt.ItemDataRole.CheckStateRole:
+                val = True if value == Qt.CheckState.Unchecked.value else False
+                self.dataChanged.emit(index, index, (role,))
+                print(self.lastError().text())
+                return QSqlRelationalTableModel.setData(self, index, val, Qt.ItemDataRole.EditRole)
+
+            else:
+                #self.data(index, Qt.ItemDataRole.CheckStateRole)
+                return QSqlRelationalTableModel.setData(self, index, value, Qt.ItemDataRole.EditRole)
