@@ -311,21 +311,19 @@ class Human(ArvenWidget):
 
 
 
-class Human_Selection(MainWindow):
+class Human_Selection(ArvenWidget):
     def __init__(self, prozess:str):
-        super(Human_Selection, self).__init__()
+        super(Human_Selection, self).__init__('not')
 
         self.setWindowTitle("Arvensteyn Adressbuch")
+        self.setStyleSheet('background-color:white')
 
-        self.ButtonZurueck.hide()
-        self.Kopfzeile.hide()
-        self.labelDatum.hide()
-        self.center()
+
         self.setBaseSize(800, 800)
 
-        self.zurueck = ArvenButton("abbrechen")
-        self.verticalLayout_3.addWidget(self.zurueck)
+        self.zurueck = ArvenButton("Schließen!")
         self.zurueck.clicked.connect(self.closing)
+
 
         self.tabs = QTabWidget(self)
         self.tab1 = Human("neu")
@@ -333,7 +331,11 @@ class Human_Selection(MainWindow):
         self.tabs.addTab(self.tab1, "Neuen Kontakt eintragen")
         self.tabs.addTab(self.tab2, "Kontakt aus Adressbuch wählen")
 
-        self.MainVerticalLayout.addWidget(self.tabs)
+        self.main_layout = QVBoxLayout()
+        self.main_layout.addWidget(self.zurueck)
+        self.setLayout(self.main_layout)
+
+        self.main_layout.addWidget(self.tabs)
 
 
     def closing(self):

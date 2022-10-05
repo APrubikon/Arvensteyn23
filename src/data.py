@@ -93,13 +93,64 @@ class MandantEditmodel(QSqlRelationalTableModel):
         filter = (f"""arvensteyn_dev22.mandanten.mandantid = {mandantid}""")
         self.setFilter(filter)
         self.select()
-
         print(self.lastError().text())
 
     def update_re(self, newperson):
         query = QSqlQuery(f"""Update arvensteyn_dev22.mandanten SET rechnungsempfaenger = {newperson}""")
         if not self.setQuery(query):
             print(self.lastError().text())
+
+    def addnew(self, new_mandant:dict):
+        stundensatz1 = None
+        if not new_mandant['stundensatz1'] == '':
+            stundensatz1 = new_mandant['stundensatz1']
+
+        stundensatz2 = None
+        if not new_mandant['stundensatz2'] == '':
+            stundensatz1 = new_mandant['stundensatz2']
+
+        mvp_anteil = None
+        if not new_mandant['mvp_anteil'] == '':
+            mvp_anteil = new_mandant['mvp_anteil']
+
+        newMandant = self.record()
+        newMandant.setGenerated(0, False)
+        newMandant.setValue(1, new_mandant['name'])
+        newMandant.setValue(2, new_mandant['Anlagejahr'])
+        newMandant.setValue(4, new_mandant['internal'])
+        newMandant.setValue(5, new_mandant['akquise'])
+        newMandant.setValue(8, new_mandant['sitz_strasse'])
+        newMandant.setValue(9, new_mandant['sitz_hausnummer'])
+        newMandant.setValue(10, new_mandant['sitz_plz'])
+        newMandant.setValue(11, new_mandant['sitz_ort'])
+        newMandant.setValue(12, new_mandant['sitz_bundesland'])
+        newMandant.setValue(13, new_mandant['sitz_staat'])
+        newMandant.setValue(27, new_mandant['rv'])
+        newMandant.setValue(14, stundensatz1)
+        newMandant.setValue(15, stundensatz2)
+        newMandant.setValue(16, new_mandant['bemerkungen'])
+        newMandant.setValue(19, new_mandant['gwg'])
+        newMandant.setValue(20, new_mandant['koll'])
+        newMandant.setValue(3, new_mandant['mvp'])
+        newMandant.setValue(21, mvp_anteil)
+        newMandant.setValue(23, new_mandant['gv_position'])
+        newMandant.setValue(28, new_mandant['nat_person'])
+        newMandant.setValue(24, new_mandant['elektr-rechnung'])
+        newMandant.setValue(6, new_mandant['gv'])
+        newMandant.setValue(7, new_mandant['re'])
+
+
+
+        if not self.insertRecord(-1, newMandant):
+            val = None
+            return val
+        else:
+            lastval = QSqlQuery()
+            lastval.exec("select lastval()")
+            lastval.next()
+            val = lastval.value(0)
+            return val
+
 
 
 class GV_model(QSqlTableModel):
@@ -148,19 +199,19 @@ class DBModelHumans(QSqlTableModel):
         self.setEditStrategy(QSqlTableModel.EditStrategy.OnFieldChange)
         self.setSort(0, Qt.SortOrder.AscendingOrder)
 
-    def welcome_human(self, name_full, name_prefix, name_first, name_last, birthday, organization, title, role,
-                      work_address1, work_city1, work_zip1, work_phone_1, work_phone_2, work_phone_3,
-                      work_fax, mobile_phone_1, work_email_1, note, url):
-        list = [name_prefix, name_first, name_last, birthday, organization, title, role,
-                work_address1, work_city1, work_zip1, work_phone_1, work_phone_2, work_phone_3,
-                work_fax, mobile_phone_1, work_email_1, note, url]
+    def welcome_human(self, name_full='', name_prefix='', name_first='', name_last='', birthday='', organization='',
+                      title='', role='', work_address1='', work_city1='', work_zip1='', work_phone_1='',
+                      work_phone_2='', work_phone_3='', work_fax='', mobile_phone_1='', work_email_1='', note='', url=''):
+       # list = [name_prefix, name_first, name_last, birthday, organization, title, role,
+       #         work_address1, work_city1, work_zip1, work_phone_1, work_phone_2, work_phone_3,
+       #         work_fax, mobile_phone_1, work_email_1, note, url]
         new_human = self.record()
         new_human.setGenerated(0, False)
         new_human.setValue(2, name_full)
         new_human.setValue(3, name_prefix)
         new_human.setValue(4, name_first)
         new_human.setValue(6, name_last)
-        new_human.setValue(9, birthday)
+        #new_human.setValue(9, birthday)
         new_human.setValue(11, organization)
         new_human.setValue(12, title)
         new_human.setValue(13, role)
@@ -176,15 +227,17 @@ class DBModelHumans(QSqlTableModel):
         new_human.setValue(70, note)
         new_human.setValue(72, url)
 
-        if not self.insertRecord(-1, new_human):
-            print(self.lastError().text())
+        self.insertRecord(-1, new_human)
+        print(self.lastError().text())
 
-        # lastval = QSqlQuery()
-        # lastval.exec("select lastval()")
-        # lastval.next()
-        # val = lastval.value(0)
-        # return val
-        #
+        self.select()
+
+        lastval = QSqlQuery()
+        lastval.exec("select lastval()")
+        lastval.next()
+        val = lastval.value(0)
+        print(val)
+
 class DBModelAuftraege(QSqlRelationalTableModel):
     def __init__(self):
         super(DBModelAuftraege, self).__init__()
@@ -368,5 +421,15 @@ class LeistungenTableModel(QSqlRelationalTableModel):
                 return QSqlRelationalTableModel.setData(self, index, val, Qt.ItemDataRole.EditRole)
 
             else:
-                #self.data(index, Qt.ItemDataRole.CheckStateRole)
+                self.data(index, Qt.ItemDataRole.CheckStateRole)
                 return QSqlRelationalTableModel.setData(self, index, value, Qt.ItemDataRole.EditRole)
+
+class MVP(QSqlTableModel):
+    def __init__(self):
+        super(MVP, self).__init__()
+
+        self.setTable("arvensteyn_dev22.partner")
+        self.select()
+        self.setFilter("active = True")
+        if not self.select() == True:
+            print(f"""{self.lastError().text()}""")

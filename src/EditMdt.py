@@ -1,6 +1,7 @@
 from src.data import DBModelMdt, MandantEditmodel, MandantListe, GV_model, REE_model, HumanSearch
 from src.MainLayout import *
-from PyQt6.QtCore import QEvent
+from PyQt6.QtCore import QEvent, QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
 import PyQt6.QtSql
 
 from PyQt6.QtWidgets import (
@@ -31,6 +32,10 @@ Staaten = ["Deutschland", "EU (außer Deutschland)", "Außerhalb EU"]
 gwg = {"Keine Anhaltspunkte für Geldwäscheverdacht" : 1,
        "Prüfung von Anhaltspunkten auf Geldwäscheverdacht erfolglos (Vermerk)" : 2,
        "Geldwäscheverdacht kann nicht beseitigt werden, Manda(n)t wird abgelehnt oder beendet" : 3}
+
+kollisionsprüfung = {"Kollisionsprüfung durch den mandantenverantwortlichen Partner ergebnislos" : 1,
+                     "Kollisionen im weiteren Sinn denkbar; Annahme nach Rücksprache mit betroffenen Partnern" : 2,
+                     "Kollision im berufsrechtlichen Sinn; Mandant wird abgelehnt" : 3}
 
 
 class EditMdt(ArvenWidget):
@@ -66,7 +71,7 @@ class EditMdt(ArvenWidget):
         self.block_c = GesVertretung()
         self.block_e = Berufsrecht()
         self.block_f = Abrechnung()
-        self.block_g = Options()
+        #self.block_g = Options()
         self.humanleash = ''
         self.block_n = Human_Selection(prozess="neu")
         self.block_m = Human_Selection(prozess="neu")
@@ -76,7 +81,7 @@ class EditMdt(ArvenWidget):
         self.scrollGrid.addWidget(self.block_c, 3, 0)
         self.scrollGrid.addWidget(self.block_e, 1, 1)
         self.scrollGrid.addWidget(self.block_f, 2, 1)
-        self.scrollGrid.addWidget(self.block_g, 3, 1)
+        #self.scrollGrid.addWidget(self.block_g, 3, 1)
 
         # setup three QDataWidgetmappers and Models
 
@@ -104,8 +109,8 @@ class EditMdt(ArvenWidget):
         self.block_c.GVcheck.stateChanged.connect(self.nat_person)
         self.block_c.REcheck.stateChanged.connect(self.no_re)
         self.block_c.elektr_rechnung_check.stateChanged.connect(self.elektr_RE)
-        self.block_g.MV_VV_ablage.stateChanged.connect(self.vv_mv_ablage_change)
-        self.block_g.MV_VV_versand.stateChanged.connect(self.vv_mv_sendung_change)
+        #self.block_g.MV_VV_ablage.stateChanged.connect(self.vv_mv_ablage_change)
+        #self.block_g.MV_VV_versand.stateChanged.connect(self.vv_mv_sendung_change)
         self.block_f.Rahmenvertrag.stateChanged.connect(self.rahmenvertrag_change)
 
         self.addSearchfield(searchable=True)
@@ -381,46 +386,46 @@ class EditMdt(ArvenWidget):
                         self.set_extra_models()
                         self.block_c.elektr_rechnung.clear()
 
-    def vv_mv_sendung_change(self):
-        # function checks if checkbox "mv_vv versendet" is checked and writes changes to db
-        # first line re initialization before mappermodel_mdt is set
-        if not self.mapper_mdt.model() is None:
-            mv_versandindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 18)
-            if self.block_g.MV_VV_versand.isChecked():
-                self.mappermodel_mdt.setData(mv_versandindex, True)
-            else:
-                self.mappermodel_mdt.setData(mv_versandindex, False)
+    #def vv_mv_sendung_change(self):
+    #    # function checks if checkbox "mv_vv versendet" is checked and writes changes to db
+    #    # first line re initialization before mappermodel_mdt is set
+    #    if not self.mapper_mdt.model() is None:
+    #        mv_versandindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 18)
+    #        if self.block_g.MV_VV_versand.isChecked():
+    #            self.mappermodel_mdt.setData(mv_versandindex, True)
+    #        else:
+    #            self.mappermodel_mdt.setData(mv_versandindex, False)
+    #
+    #def vv_mv_sendung(self):
+    #    # function maps db-entry for "mv/vv versendet" to checkbox;
+    #    # first line re initialization before mappermodel_mdt is set
+    #    if not self.mapper_mdt.model() is None:
+    #        mv_vv_status = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 18).data(Qt.ItemDataRole.DisplayRole)
+    #        if mv_vv_status == True:
+    #            self.block_g.MV_VV_versand.setChecked(True)
+    #        else:
+    #            self.block_g.MV_VV_versand.setChecked(False)
 
-    def vv_mv_sendung(self):
-        # function maps db-entry for "mv/vv versendet" to checkbox;
-        # first line re initialization before mappermodel_mdt is set
-        if not self.mapper_mdt.model() is None:
-            mv_vv_status = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 18).data(Qt.ItemDataRole.DisplayRole)
-            if mv_vv_status == True:
-                self.block_g.MV_VV_versand.setChecked(True)
-            else:
-                self.block_g.MV_VV_versand.setChecked(False)
-
-    def vv_mv_ablage_change(self):
-        # function checks if checkbox "mv_vv abgelegt" is checked and writes changes to db
-        # first line re initialization before mappermodel_mdt is set
-        if not self.mapper_mdt.model() is None:
-            mv_ablageindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 19)
-            if self.block_g.MV_VV_ablage.isChecked():
-                self.mappermodel_mdt.setData(mv_ablageindex, True)
-            else:
-                self.mappermodel_mdt.setData(mv_ablageindex, False)
-
-    def vv_mv_ablage(self):
-        # function maps db-entry for "mv/vv abgelegt" to checkbox;
-        # first line re initialization before mappermodel_mdt is set
-        if not self.mapper_mdt.model() is None:
-            mv_vv_ablagestatus = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 19).data(
-                Qt.ItemDataRole.DisplayRole)
-            if mv_vv_ablagestatus == True:
-                self.block_g.MV_VV_ablage.setChecked(True)
-            else:
-                self.block_g.MV_VV_ablage.setChecked(False)
+    #def vv_mv_ablage_change(self):
+    #    # function checks if checkbox "mv_vv abgelegt" is checked and writes changes to db
+    #    # first line re initialization before mappermodel_mdt is set
+    #    if not self.mapper_mdt.model() is None:
+    #        mv_ablageindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 19)
+    #        if self.block_g.MV_VV_ablage.isChecked():
+    #            self.mappermodel_mdt.setData(mv_ablageindex, True)
+    #        else:
+    #            self.mappermodel_mdt.setData(mv_ablageindex, False)
+    #
+    #def vv_mv_ablage(self):
+    #    # function maps db-entry for "mv/vv abgelegt" to checkbox;
+    #    # first line re initialization before mappermodel_mdt is set
+    #    if not self.mapper_mdt.model() is None:
+    #        mv_vv_ablagestatus = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 19).data(
+    #            Qt.ItemDataRole.DisplayRole)
+    #        if mv_vv_ablagestatus == True:
+    #            self.block_g.MV_VV_ablage.setChecked(True)
+    #        else:
+    #            self.block_g.MV_VV_ablage.setChecked(False)
 
     def rahmenvertrag_change(self):
         # function checks if checkbox "rahmenvertrag" is checked and writes changes to db
@@ -578,34 +583,45 @@ class Berufsrecht(QWidget):
         self.BerufsrechtLabel = ArveLabel("header", "Berufsrechtliche Sorgfalt")
         self.KollisionMdt = ComboArve("Mandantenbezogene Kollision")
         self.GeldwaescheG = ComboArve("Geldwäschegesetz")
-        self.Drittwirkung = ComboArve("Schutzwirkung zugunsten Dritter (Konzernunternehmen)")
+        #self.Drittwirkung = ComboArve("Schutzwirkung zugunsten Dritter (Konzernunternehmen)")
 
         self.VBox = QVBoxLayout(self)
 
         self.VBox.addWidget(self.BerufsrechtLabel)
         self.VBox.addWidget(self.KollisionMdt)
         self.VBox.addWidget(self.GeldwaescheG)
-        self.VBox.addWidget(self.Drittwirkung)
+        #self.VBox.addWidget(self.Drittwirkung)
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
         self.VBox.addSpacerItem(self.spacerV)
         self.fill_gwg()
+        self.fill_koll()
 
     def fill_gwg(self):
         for key, value in gwg.items():
             self.GeldwaescheG.addItem(key)
 
+    def fill_koll(self):
+        for key, value in kollisionsprüfung.items():
+            self.KollisionMdt.addItem(key)
+
 
 class Abrechnung(QWidget):
     def __init__(self):
         super(Abrechnung, self).__init__()
+        limit = QRegularExpression("[0-9]*")
+        limiter = QRegularExpressionValidator(limit)
+
 
         self.AbrechnungLabel1 = ArveLabel('header', 'Vergütung')
         self.Rahmenvertrag = ArveCheck('Rahmenvertrag', True)
         self.Stundensatz1 = InputArve("Stundensatz")
+        self.Stundensatz1.setValidator(limiter)
         self.Stundensatz2 = InputArve("Stundensatz 2")
+        self.Stundensatz2.setValidator(limiter)
         self.Stundensatz2.setDisabled(True)
         self.MVPAnteil = InputArve('Anteil des MVP in %')
+        self.MVPAnteil.setValidator(limiter)
         self.SonstigesVerguetung = QTextEdit()
         self.SonstigesVerguetung.setFixedHeight(100)
         self.SonstigesVerguetung.setStyleSheet("background-color:rgb(241, 241, 241); border-radius:4px;")
@@ -619,43 +635,43 @@ class Abrechnung(QWidget):
         self.VBox.addWidget(self.MVPAnteil)
         self.VBox.addWidget(self.SonstigesVerguetung)
 
-class Options(QWidget):
-    def __init__(self):
-        super(Options, self).__init__()
-
-        self.title = ArveLabel("header", "Optionen")
-        self.MVneu = ArvenButton("Mandatsvertrag erstellen")
-        self.VVneu = ArvenButton("Vergütungsvereinbarung erstellen")
-        self.MV_VV_versand = ArveCheck("Mandatsvertrag und Vergütungsvereinbarung versendet", False)
-        self.MV_VV_ablage = ArveCheck("Mandatsvertrag und Vergütungsvereinbarung unterschrieben abgelegt", False)
-        self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
-                                   vPolicy=QSizePolicy.Policy.Expanding)
-        self.VBox = QVBoxLayout(self)
-        self.VBox.addWidget(self.title)
-        self.VBox.addWidget(self.MVneu)
-        self.VBox.addWidget(self.VVneu)
-        self.VBox.addWidget(self.MV_VV_versand)
-        self.VBox.addWidget(self.MV_VV_ablage)
-        self.VBox.addSpacerItem(self.spacerV)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#class Options(QWidget):
+#    def __init__(self):
+#        super(Options, self).__init__()
+#
+#        self.title = ArveLabel("header", "Optionen")
+#        self.MVneu = ArvenButton("Mandatsvertrag erstellen")
+#        self.VVneu = ArvenButton("Vergütungsvereinbarung erstellen")
+#        self.MV_VV_versand = ArveCheck("Mandatsvertrag und Vergütungsvereinbarung versendet", False)
+#        self.MV_VV_ablage = ArveCheck("Mandatsvertrag und Vergütungsvereinbarung unterschrieben abgelegt", False)
+#        self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
+#                                   vPolicy=QSizePolicy.Policy.Expanding)
+#        self.VBox = QVBoxLayout(self)
+#        self.VBox.addWidget(self.title)
+#        self.VBox.addWidget(self.MVneu)
+#        self.VBox.addWidget(self.VVneu)
+#        self.VBox.addWidget(self.MV_VV_versand)
+#        self.VBox.addWidget(self.MV_VV_ablage)
+#        self.VBox.addSpacerItem(self.spacerV)
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 class ReadOnlyDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):

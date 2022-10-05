@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from src.MainWindow import *
 
 from src.ArvensteynMenu import Tray
+from src.data import DBModelHumans
 
 
 def main():

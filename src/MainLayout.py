@@ -283,7 +283,7 @@ class ArvenDialog(QDialog):
 
         self.setStyleSheet("background-color: white; color: rgb(9, 58, 112);")
 
-        QBtn = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        QBtn = QDialogButtonBox.StandardButton.Ok
 
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)

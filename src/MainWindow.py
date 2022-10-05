@@ -13,8 +13,9 @@ from src.Testwidget2 import Testwidget2
 from src.BaseInfo import BaseInfo
 from src.EditMdt import EditMdt
 from src.variables import today
-from src.auftraege import MainFrameAuftraege
+from src.auftraege import MainFrameAuftraege, DatenAuftraege
 from src.Timesheet import Timeframe
+from src.Mdt_new import New_Mandant
 
 basedir = os.path.dirname(__file__)
 
@@ -135,6 +136,20 @@ class Pitch(QMainWindow):
                     self.main_stack.addWidget(self.new)
                     idx = self.main_stack.indexOf(self.new)
                     self.main_stack.slideInIdx(idx)
+
+                if obj.text() == 'Neuer Mandant':
+                    self.new = New_Mandant()
+                    self.main_stack.addWidget(self.new)
+                    idx = self.main_stack.indexOf(self.new)
+                    self.main_stack.slideInIdx(idx)
+
+                if obj.text() == 'Neuer Auftrag':
+                    self.new = DatenAuftraege()
+                    self.main_stack.addWidget(self.new)
+                    idx = self.main_stack.indexOf(self.new)
+                    self.main_stack.slideInIdx(idx)
+
+
 
 
         return QWidget.eventFilter(self, obj, event)
@@ -260,7 +275,7 @@ class Desktop(ArvenWidget):
         # self.desktopgrid.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # pc Nr. 1
-        self.aktenverwaltung = PlayingCard('Aktenverwaltung', 'Neuer Mandant', 'Mandanten verwalten', 'Auftrag Anlegen',
+        self.aktenverwaltung = PlayingCard('Aktenverwaltung', 'Neuer Mandant', 'Mandanten verwalten', 'Neuer Auftrag',
                                            'Aufträge verwalten')
         # self.aktenverwaltung.secondaryWidget.a.clicked.connect(self.testsender)
         # PC Nr. 2
