@@ -5,14 +5,13 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from src.MainWindow import *
 
 from src.ArvensteynMenu import Tray
-from src.data import DBModelHumans
-
+from src.MdtVerwaltung import Mandantenverwaltung
 
 def main():
     app = QApplication(sys.argv)
-    w = Pitch()
+    w = Mandantenverwaltung()
     w.showMaximized()
-    app.setQuitOnLastWindowClosed(False)
+    #app.setQuitOnLastWindowClosed(False)
 
     QLocale.setDefault(QLocale(QLocale.Language.German))
 

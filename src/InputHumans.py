@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QTabWidget
 )
 
-from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtCore import QRegularExpression, pyqtSlot, QModelIndex
 from PyQt6.QtGui import QRegularExpressionValidator
 from src.data import DBModelHumans
 from src.variables import today, today_date
@@ -276,7 +276,6 @@ class Human(ArvenWidget):
 
         if prozess == "auswahl":
             self.Titel.setText("Eintrag aus Adressbuch auswählen")
-            # ToDo: Layout for new entry in separate class, compose
 
     def extraTelefon1(self):
         self.block_a.extraTelefon2.show()
@@ -327,7 +326,7 @@ class Human_Selection(ArvenWidget):
 
         self.tabs = QTabWidget(self)
         self.tab1 = Human("neu")
-        self.tab2 = Human("auswahl")
+        self.tab2 = HumanAuswahl()
         self.tabs.addTab(self.tab1, "Neuen Kontakt eintragen")
         self.tabs.addTab(self.tab2, "Kontakt aus Adressbuch wählen")
 
@@ -401,3 +400,75 @@ class HumanWidgets(ArvenWidget):
 
         self.NeuesAnschreiben = ArvenButton("Neues Anschreiben in MS Word anlegen")
         self.ButtonAdd = ArvenButton("Zum Adressbuch hinzufügen")
+
+class HumanAuswahl(ArvenWidget):
+    def __init__(self):
+        super(HumanAuswahl, self).__init__('not')
+
+        self.auswahl = InputArve('Nach Namen suchen')
+        self.auswahl.returnPressed.connect(self.select)
+        self.liste = ArvenTable()
+        self.liste.clicked.connect(self.selectfromliste)
+        self.uebernehmen = ArvenButton("Übernehmen")
+
+        self.fullname = ArveLabel('header', '')
+
+        self.arbeitgeber = ArveLabel('notice', '')
+        self.position = ArveLabel('notice', '')
+        self.adress1 = ArveLabel('notice', '')
+        self.adress2 = ArveLabel('notice', '')
+
+        self.telephone1 = ArveLabel('notice', '')
+        self.telephone2 = ArveLabel('notice', '')
+        self.telefax = ArveLabel('notice', '')
+        self.email = ArveLabel('notice', '')
+
+        self.MainVertical = QVBoxLayout()
+        self.setLayout(self.MainVertical)
+        self.MainVertical.addWidget(self.auswahl)
+        self.MainVertical.addWidget(self.liste)
+        self.MainVertical.addWidget(self.fullname)
+        self.MainVertical.addWidget(self.arbeitgeber)
+        self.MainVertical.addWidget(self.position)
+        self.MainVertical.addWidget(self.adress1)
+        self.MainVertical.addWidget(self.adress2)
+        self.MainVertical.addWidget(self.telephone1)
+        self.MainVertical.addWidget(self.telephone2)
+        self.MainVertical.addWidget(self.telefax)
+        self.MainVertical.addWidget(self.email)
+        self.MainVertical.addSpacerItem(self.spacerV)
+        self.MainVertical.addWidget(self.uebernehmen)
+
+    def select(self):
+        selectionmodel = DBModelHumans()
+        selectionmodel.filter_name(self.auswahl.text())
+        self.liste.setModel(selectionmodel)
+        for i in range(selectionmodel.columnCount()):
+            self.liste.setColumnHidden(i, True)
+        self.liste.setColumnHidden(2, False)
+
+    @pyqtSlot(QModelIndex)
+    def selectfromliste(self, index):
+        self.NrHuman: int = index.sibling(index.row(), 0).data()
+        self.NameHuman = index.sibling(index.row(), 2).data()
+        self.TitleHuman = index.sibling(index.row(), 12).data()
+        self.GenderHuman = index.sibling(index.row(), 3).data()
+        self.Organization = index.sibling(index.row(), 11).data()
+        self.Position = index.sibling(index.row(), 13).data()
+        self.adressdata1 = index.sibling(index.row(), 31).data()
+        self.adressdata2 = index.sibling(index.row(), 34).data()
+        self.adressdata3 = index.sibling(index.row(), 32).data()
+        self.telephonedata1 = index.sibling(index.row(), 49).data()
+        self.telephonedata2 = index.sibling(index.row(), 58).data()
+        self.telephaxdata3 = index.sibling(index.row(), 55).data()
+        self.emaildata1 = index.sibling(index.row(), 64).data()
+
+        self.fullname.setText(f"""{self.GenderHuman} {self.TitleHuman} {self.NameHuman}""")
+        self.arbeitgeber.setText(f"""{self.Organization}""")
+        self.position.setText(self.Position)
+        self.adress1.setText(self.adressdata1)
+        self.adress2.setText(f"""{self.adressdata2} {self.adressdata3}""")
+        self.telephone1.setText(self.telephonedata1)
+        self.telephone2.setText(self.telephonedata2)
+        self.telefax.setText(self.telephaxdata3)
+        self.telephone1.setText(self.emaildata1)

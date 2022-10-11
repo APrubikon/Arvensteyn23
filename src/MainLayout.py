@@ -61,7 +61,7 @@ class MainWindow(QWidget, curr):
         self.spacerH = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Expanding,
                                    vPolicy=QSizePolicy.Policy.Minimum)
 
-        self.ButtonZurueck.clicked.connect(self.returnDesktop)
+
         self.center()
 
     def center(self):
@@ -70,13 +70,6 @@ class MainWindow(QWidget, curr):
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-    def returnDesktop(self):
-        apps = QApplication.topLevelWidgets()
-        for i in apps:
-            i.close()
-        from src.desktop import Desktop
-        Desktop().showMaximized()
 
 
 
@@ -294,6 +287,29 @@ class ArvenDialog(QDialog):
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
+
+class ComboDialog(QDialog):
+    def __init__(self, title:str, warning:str, combo:dict):
+        super(ComboDialog, self).__init__()
+        self.setWindowTitle(title)
+
+        self.setStyleSheet("background-color: white; color: rgb(9, 58, 112);")
+
+        QBtn = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout()
+       # message = QLabel(warning)
+        self.combobox = ComboArve(warning)
+        for key, value in combo.items():
+            self.combobox.addItem(key)
+        self.layout.addWidget(self.combobox)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
 
 class VLine(QFrame):
     def __init__(self):

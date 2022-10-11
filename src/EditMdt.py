@@ -122,7 +122,7 @@ class EditMdt(ArvenWidget):
 
     def add_mapping(self):
         self.mapper_mdt.addMapping(self.block_a.NameMdt, 1)
-        self.mapper_mdt.addMapping(self.block_a.MdtNr, 23)
+        self.mapper_mdt.addMapping(self.block_a.MdtNr, 22)
         self.mapper_mdt.addMapping(self.block_a.MVP, 3)
 
 
@@ -133,6 +133,7 @@ class EditMdt(ArvenWidget):
         self.mapper_mdt.addMapping(self.block_b.Sitz5, 12)
         self.mapper_mdt.addMapping(self.block_b.Sitz5, 13)
         self.mapper_mdt.addMapping(self.block_c.GVPosition, 24)
+        self.mapper_mdt.addMapping(self.block_c.GVdisplay, 6)
         self.mapper_mdt.addMapping(self.block_c.elektr_rechnung, 25)
         self.mapper_mdt.addMapping(self.block_e.GeldwaescheG, 20)
 
@@ -176,7 +177,7 @@ class EditMdt(ArvenWidget):
         self.mappermodel_re = REE_model(self.re_number)
         self.mapper_REE.setModel(self.mappermodel_re)
 
-        self.add_extra_mapping()
+        #self.add_extra_mapping()
         self.mapper_gv.toFirst()
         self.mapper_REE.toFirst()
 
@@ -184,8 +185,8 @@ class EditMdt(ArvenWidget):
         self.AkquiseFileStatus()
         self.elektr_re_status()
         self.no_re()
-        self.vv_mv_ablage()
-        self.vv_mv_sendung()
+        #self.vv_mv_ablage()
+        #self.vv_mv_sendung()
         self.rahmenvertrag()
         self.nat_person()
 
@@ -341,11 +342,11 @@ class EditMdt(ArvenWidget):
             if self.block_c.GVcheck.isChecked():
                 if not gv_check == '':
                     if self.mappermodel_mdt.setData(self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 6), None):
-                        self.set_extra_models()
+                       # self.set_extra_models()
                         self.block_c.GVdisplay.clear()
 
     def no_re(self):
-        # disable gv if no separate rechnungsempfänger
+        # disable re if no separate rechnungsempfänger
         if self.block_c.REcheck.isChecked():
             self.block_c.REE_AddToAdressBook.setDisabled(False)
         else:
@@ -354,12 +355,13 @@ class EditMdt(ArvenWidget):
 
     def update_re(self):
         # if re is existant and mandant is checked as no abw. ree
-        dlg = ArvenDialog("Abweichenden Rechnungsempfänger löschen",
+        dlg = ArvenDialog("Persönlichen Rechnungsempfänger löschen",
                           "Der abweichende Rechnungsempfänger wird endgültig gelöscht. \n\n(Der Eintrag"
                           " im Adressbuch bleibt bestehen und \nkann jederzeit wieder mit dem Mandanten"
                           " verknüpft werden.)")
         if dlg.exec():
             re_check = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 7).data(Qt.ItemDataRole.DisplayRole)
+            print(re_check)
             if not self.block_c.GVcheck.isChecked():
                 if not re_check == '':
                     if self.mappermodel_mdt.setData(self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 7),
@@ -559,7 +561,7 @@ class GesVertretung(QWidget):
         self.GVVBox.addWidget(self.GVdisplay)
         self.GVVBox.addWidget(self.AddToAdressBook)
 
-        self.REcheck = ArveCheck("Abweichender Rechnungsempfänger", True)
+        self.REcheck = ArveCheck("Persönlicher Rechnungsempfänger", True)
         self.RE_display = InputArve("Rechnungsempfänger")
         self.RE_display.setReadOnly(True)
         self.RE_blind = QComboBox()

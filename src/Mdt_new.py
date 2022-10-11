@@ -80,6 +80,8 @@ class New_Mandant(ArvenWidget):
         self.block_c.GVcheck.stateChanged.connect(self.nat_person)
         self.block_c.REcheck.stateChanged.connect(self.noRE)
         self.block_c.elektr_rechnung_check.stateChanged.connect(self.elektrRechnung)
+        self.block_m.tab2.uebernehmen.clicked.connect(self.connectGV)
+        self.block_n.tab2.uebernehmen.clicked.connect(self.connectRE)
 
         self.scrollSpace.setWidget(self.scrollWidget)
 
@@ -201,3 +203,13 @@ class New_Mandant(ArvenWidget):
             self.block_c.elektr_rechnung.clear()
         else:
             self.block_c.elektr_rechnung.setDisabled(False)
+
+    def connectGV(self):
+        self.GV = self.block_m.tab2.NrHuman
+        self.block_c.GVdisplay.setText(
+            f"""{self.block_m.tab2.GenderHuman} {self.block_m.tab2.TitleHuman} {self.block_m.tab2.NameHuman}""")
+
+    def connectRE(self):
+        self.RE = self.block_n.tab2.NrHuman
+        self.block_c.RE_display.setText(
+            f"""{self.block_n.tab2.GenderHuman} {self.block_n.tab2.TitleHuman} {self.block_n.tab2.NameHuman}""")

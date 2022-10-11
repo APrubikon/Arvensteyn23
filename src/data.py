@@ -43,10 +43,8 @@ class MitarbeiterCred(QSqlTableModel):
                           FROM arvensteyn_dev22.mitglieder
                          WHERE mitglied = '{Mitglied}'
                            AND auth = crypt('{PW}', auth);""")
-        print(query2.lastQuery())
 
         if query2.record().count() == 1:
-            print(query2.record().value(0))
             return True
         else:
             return False
@@ -74,7 +72,7 @@ class MandantListe(QSqlQueryModel):
         self.setQuery(query)
 
     def filter_by_name(self, input_name):
-        query = f"""select arvensteyn_dev22.mandanten.name, arvensteyn_dev22.mandanten.mandantid FROM arvensteyn_dev22.mandanten WHERE arvensteyn_dev22.mandanten.name LIKE '%{input_name}%' 
+        query = f"""select arvensteyn_dev22.mandanten.name, arvensteyn_dev22.mandanten.mandantid FROM arvensteyn_dev22.mandanten WHERE arvensteyn_dev22.mandanten.name ILIKE '%{input_name}%' 
         ORDER BY arvensteyn_dev22.mandanten.name ASC"""
         self.setQuery(query)
         while self.query().next():
@@ -90,6 +88,7 @@ class MandantEditmodel(QSqlRelationalTableModel):
         self.setSort(1, Qt.SortOrder.AscendingOrder)
         self.setJoinMode(QSqlRelationalTableModel.JoinMode.LeftJoin)
         self.setRelation(3, QSqlRelation("arvensteyn_dev22.partner", "partnerid", "name"))
+        self.setRelation(6, QSqlRelation("arvensteyn_dev22.humans", 'index', 'full_name'))
         filter = (f"""arvensteyn_dev22.mandanten.mandantid = {mandantid}""")
         self.setFilter(filter)
         self.select()
@@ -185,7 +184,6 @@ class HumanSearch(QSqlQueryModel):
         super(HumanSearch, self).__init__()
         query = f"""SELECT max(index) FROM arvensteyn_dev22.humans"""
         self.setQuery(query)
-        print(self.rowCount())
         self.new_index = self.index(0, 0).data()
         self.result()
 
@@ -236,7 +234,12 @@ class DBModelHumans(QSqlTableModel):
         lastval.exec("select lastval()")
         lastval.next()
         val = lastval.value(0)
-        print(val)
+        return val
+
+    def filter_name(self, name):
+        filter = f"""name_last ILIKE '%{name}%'"""
+        self.setFilter(filter)
+        self.select()
 
 class DBModelAuftraege(QSqlRelationalTableModel):
     def __init__(self):
@@ -360,7 +363,7 @@ class MostRecentFiles(QSqlQueryModel):
                           arvensteyn_dev22.mandanten.mandantid
                           group by arvensteyn_dev22.auftraege.id, arvensteyn_dev22.mandanten.name LIMIT 10""")
 
-        print(self.ra)
+
         self.setQuery(query)
         print(self.lastError().text())
 
