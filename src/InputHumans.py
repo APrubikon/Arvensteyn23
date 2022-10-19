@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QTabWidget
 )
 
-from PyQt6.QtCore import QRegularExpression, pyqtSlot, QModelIndex
+from PyQt6.QtCore import QRegularExpression, pyqtSlot, QModelIndex, QVariant
 from PyQt6.QtGui import QRegularExpressionValidator
 from src.data import DBModelHumans
 from src.variables import today, today_date
@@ -56,7 +56,7 @@ class Human(ArvenWidget):
         self.Prozessschritt(prozess=prozess)
 
         self.tether = ""
-        #self.block_a.ButtonAdd.clicked.connect(self.human_cleanup)
+
 
 
     def human_cleanup(self):
@@ -359,7 +359,7 @@ class HumanWidgets(ArvenWidget):
         self.Titel = ComboArve("Titel auswählen")
         self.Titel.addItems(Titel)
         self.birthday = ArvenDate()
-        self.birthday.setDate(today_date)
+        #self.birthday.setDate(today_date)
         self.url = InputArve("Website")
         self.url.setFixedWidth(250)
         self.Arbeitgeber = InputArve("Unternehmen")
@@ -404,6 +404,8 @@ class HumanWidgets(ArvenWidget):
 class HumanAuswahl(ArvenWidget):
     def __init__(self):
         super(HumanAuswahl, self).__init__('not')
+
+        self.NrHuman = 0
 
         self.auswahl = InputArve('Nach Namen suchen')
         self.auswahl.returnPressed.connect(self.select)

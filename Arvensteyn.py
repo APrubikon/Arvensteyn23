@@ -9,7 +9,7 @@ from src.MdtVerwaltung import Mandantenverwaltung
 
 def main():
     app = QApplication(sys.argv)
-    w = Mandantenverwaltung()
+    w = Pitch()
     w.showMaximized()
     #app.setQuitOnLastWindowClosed(False)
 

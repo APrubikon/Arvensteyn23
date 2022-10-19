@@ -11,11 +11,12 @@ from src.MainLayout import *
 from src.Testwidget1 import Testwidget1
 from src.Testwidget2 import Testwidget2
 from src.BaseInfo import BaseInfo
-from src.EditMdt import EditMdt
+from src.MdtVerwaltung import Mandantenverwaltung
 from src.variables import today
 from src.auftraege import MainFrameAuftraege, DatenAuftraege
 from src.Timesheet import Timeframe
 from src.Mdt_new import New_Mandant
+from src.Auftrag_new import MainFrameAuftraege as AuftragNeu
 
 basedir = os.path.dirname(__file__)
 
@@ -80,6 +81,9 @@ class Pitch(QMainWindow):
         self.main_stack.addWidget(self.stack_zero)
         self.main_stack.addWidget(self.stack_one)
 
+        ##signal
+
+
 
     def center(self):
         qr = self.frameGeometry()
@@ -98,7 +102,6 @@ class Pitch(QMainWindow):
         self.baseinfo.addWidget(self.datum)
 
     def eventFilter(self, obj, event):
-       # switchboard = {'Mandanten verwalten' : EditMdt()}
 
         if event.type() == QEvent.Type.MouseButtonPress:
             if self.labellogo is obj:
@@ -120,7 +123,7 @@ class Pitch(QMainWindow):
                     self.main_stack.slideInIdx(idx)
 
                 if obj.text() == 'Mandanten verwalten':
-                    self.new = EditMdt()
+                    self.new = Mandantenverwaltung()
                     self.main_stack.addWidget(self.new)
                     idx = self.main_stack.indexOf(self.new)
                     self.main_stack.slideInIdx(idx)
@@ -142,19 +145,30 @@ class Pitch(QMainWindow):
                     self.main_stack.addWidget(self.new)
                     idx = self.main_stack.indexOf(self.new)
                     self.main_stack.slideInIdx(idx)
+                    self.new.getmehome.connect(self.slideInHome)
 
                 if obj.text() == 'Neuer Auftrag':
-                    self.new = DatenAuftraege()
+                    self.new = AuftragNeu()
                     self.main_stack.addWidget(self.new)
                     idx = self.main_stack.indexOf(self.new)
                     self.main_stack.slideInIdx(idx)
 
-
-
-
         return QWidget.eventFilter(self, obj, event)
 
 
+    @pyqtSlot()
+    def slideInHome(self):
+        if self.main_stack.currentIndex() == 0:
+            pass
+        elif self.main_stack.currentIndex() == 1:
+            self.main_stack.slideInIdx(0)
+        else:
+            self.old = self.main_stack.currentWidget()
+            print(self.old)
+            self.main_stack.removeWidget(self.old)
+            self.old.deleteLater()
+            self.main_stack.slideInIdx(0)
+            self.user_label.setText(get_headline())
 
 
 class SlidingStackedWidget(QStackedWidget):
@@ -201,6 +215,8 @@ class SlidingStackedWidget(QStackedWidget):
         elif idx < 0:
             idx = (idx + self.count()) % self.count()
         self.slideInWgt(self.widget(idx))
+
+
 
     def slideInWgt(self, new_widget):
         if self.m_active:
@@ -299,8 +315,6 @@ class Desktop(ArvenWidget):
         self.desktopgrid.addWidget(self.einstellungen, 1, 0)
         self.desktopgrid.addWidget(self.dokumente, 0, 2)
         self.desktopgrid.addWidget(self.auswertungen, 1, 2)
-
-        #
 
 
 class PlayingCard(QWidget):
@@ -477,5 +491,5 @@ class ColorButton(QPushButton):
         self.text_color_animation.stop()
         self.text_color_animation.setStartValue(QColor(9, 58, 112, 255))
         self.text_color_animation.setEndValue(QColor(0, 0, 0, 0))
-        self.text_color_animation.setDuration(3000)
+        self.text_color_animation.setDuration(6000)
         self.text_color_animation.start()

@@ -1,8 +1,9 @@
-from src.data import DBModelMdt, MandantEditmodel, MandantListe, GV_model, REE_model, HumanSearch
+from src.data import DBModelMdt, MandantEditmodel, MandantListe, HumanSearch
 from src.MainLayout import *
-from PyQt6.QtCore import QEvent, QRegularExpression, QVariantAnimation
+from PyQt6.QtCore import QEvent, QRegularExpression, QVariantAnimation, QTimer, QVariant
 from PyQt6.QtGui import QRegularExpressionValidator
 import PyQt6.QtSql
+import time
 
 from PyQt6.QtWidgets import (
                              QHBoxLayout,
@@ -14,9 +15,7 @@ from PyQt6.QtWidgets import (
                              QSizePolicy,
                              QTextEdit,
                              QCompleter,
-                             QFrame,
-                             QDataWidgetMapper,
-                             QComboBox, QItemDelegate
+                             QDataWidgetMapper
                             )
 
 from PyQt6 import QtCore
@@ -28,7 +27,7 @@ Positionen = ["Geschäftsführerin", "Geschäftsführer", "Mitglied des Vorstand
 Bundeslaender = ['Baden-Württemberg', 'Bayern', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg',
                  'Hessen', 'Mecklenburg-Vorpommern', 'Niedersachsen', 'Nordrhein-Westfalen',
                  'Rheinland-Pfalz', 'Saarland', 'Sachsen', 'Sachsen-Anhalt', 'Schleswig-Holstein', 'Thüringen']
-Staaten = ["Deutschland", "EU (außer Deutschland)", "Außerhalb EU"]
+Staaten = {"Deutschland" : 1, "EU (außer Deutschland)" : 2, "Außerhalb EU" : 3}
 
 gwg = {"Keine Anhaltspunkte für Geldwäscheverdacht" : 1,
        "Prüfung von Anhaltspunkten auf Geldwäscheverdacht erfolglos (Vermerk)" : 2,
@@ -45,9 +44,11 @@ class Mandantenverwaltung(ArvenWidget):
 
         self.setObjectName('Mandantenverwaltung')
         self.setWindowTitle("Stammblatt Mandanten bearbeiten")
+        self.setStyleSheet('background-color: white')
 
         ## widgets
         self.new_search = ArveLabel('header', 'Mandanten verwalten')
+        self.new_search.setStyleSheet('color:rgb(9, 58, 112); font-weight: bold;')
         self.new_search.installEventFilter(self)
 
         self.searchfield = SearchfieldMandanten()
@@ -71,9 +72,12 @@ class Mandantenverwaltung(ArvenWidget):
         ##signals
         self.searchfield.searchLine_mdt.returnPressed.connect(self.filtermdt)
         self.searchfield.search_table.doubleClicked.connect(self.indexmap_2)
-
-        # init functions
-        self.addSearchfield(True)
+        self.editfield.block_a.Intern.stateChanged.connect(self.editfield.InternalStatusChange)
+        #self.editfield.block_c.GVcheck.stateChanged.connect(self.editfield.natPersonChange)
+        self.editfield.block_f.Rahmenvertrag.stateChanged.connect(self.editfield.RVChange)
+        self.editfield.block_a.Akquise.stateChanged.connect(self.editfield.akquiseStatusChange)
+        self.editfield.block_c.GVdisplay.installEventFilter(self)
+        self.editfield.block_c.RE_display.installEventFilter(self)
 
     def filtermdt(self):
         self.searchfield.search_model.filter_by_name(self.searchfield.searchLine_mdt.text())
@@ -83,14 +87,9 @@ class Mandantenverwaltung(ArvenWidget):
         # central fork to change from searchfield to individual client.
         if not index.sibling(index.row(), 1).data() is None:  # no client nr. = no client fields
             self.cur_index = index.sibling(index.row(), 1).data()  # identify client nr.
+            self.editfield.addSearchfield(False)
             self.editfield.refresh_data(self.cur_index)
             self.slide_search('out')
-
-         # fetch data pertaining to client nr
-        # fetch extra data re legal representative and bill
-            # receiver
-
-            #self.addSearchfield(False)  # unblock editable fields
         else:
             self.cur_index = ''  # don't crash if no client nr., retry
             self.searchfield.searchLine_mdt.clear()
@@ -118,23 +117,35 @@ class Mandantenverwaltung(ArvenWidget):
     def slide_searchII(self, value):
         self.searchfield.setFixedWidth(value)
 
-            
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.MouseButtonPress:
             if self.new_search is obj:
                 self.slide_search('in')
+            elif self.editfield.block_c.GVdisplay is obj:
+                self.open_gv()
+            elif self.editfield.block_c.RE_display is obj:
+                self.open_re()
 
         return QWidget.eventFilter(self, obj, event)
 
-    def addSearchfield(self, searchable:bool):
-        if searchable == True:
-            for i in self.editfield.children():
-                if isinstance(i, InputArve | ComboArve | ArveCheck | ArveLabel | ArvenButton):
-                    i.setDisabled(True)
-        elif searchable == False:
-            for i in self.editfield.children():
-                if isinstance(i, InputArve | ComboArve | ArveCheck | ArveLabel | ArvenButton):
-                    i.setDisabled(False)
+    def open_gv(self):
+        self.editfield.block_gv.tab1.block_a.Arbeitgeber.setText(self.editfield.block_a.NameMdt.text())
+        self.editfield.block_gv.tab1.block_a.Position.setText(self.editfield.block_c.GVPosition.text())
+        self.editfield.block_gv.tab1.block_a.Adresse1.setText(self.editfield.block_b.Sitz1.text())
+        self.editfield.block_gv.tab1.block_a.Adresse2.setText(self.editfield.block_b.Sitz2.text())
+        self.editfield.block_gv.tab1.block_a.PLZ.setText(self.editfield.block_b.Sitz3.text())
+        self.editfield.block_gv.tab1.block_a.Ort.setText(self.editfield.block_b.Sitz4.text())
+        self.editfield.block_gv.show()
+
+    def open_re(self):
+        self.editfield.block_re.tab1.block_a.Arbeitgeber.setText(self.editfield.block_a.NameMdt.text())
+        self.editfield.block_re.tab1.block_a.Position.setText(self.editfield.block_c.GVPosition.text())
+        self.editfield.block_re.tab1.block_a.Adresse1.setText(self.editfield.block_b.Sitz1.text())
+        self.editfield.block_re.tab1.block_a.Adresse2.setText(self.editfield.block_b.Sitz2.text())
+        self.editfield.block_re.tab1.block_a.PLZ.setText(self.editfield.block_b.Sitz3.text())
+        self.editfield.block_re.tab1.block_a.Ort.setText(self.editfield.block_b.Sitz4.text())
+        self.editfield.block_re.show()
+
 
 
 
@@ -160,10 +171,10 @@ class SearchfieldMandanten(ArvenWidget):
         self.searchLayout.addWidget(self.searchLine_mdt)
         self.searchLayout.addWidget(self.search_table)
 
-
 class Editfield(ArvenWidget):
     def __init__(self):
         super(Editfield, self).__init__('not')
+        self.mandantid = ''
 
         self.setObjectName('EditfieldMandanten')
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
@@ -175,13 +186,16 @@ class Editfield(ArvenWidget):
 
         self.block_a = GrundDaten()
         self.block_b = Sitz()
+        self.block_b.Sitz6.installEventFilter(self)
         self.block_c = GesVertretung()
         self.block_e = Berufsrecht()
+        self.block_e.KollisionMdt.installEventFilter(self)
+        self.block_e.GeldwaescheG.installEventFilter(self)
         self.block_f = Abrechnung()
         # self.block_g = Options()
-        self.humanleash = ''
-        self.block_n = Human_Selection(prozess="neu")
-        self.block_m = Human_Selection(prozess="neu")
+        self.block_gv = Human_Selection(prozess="neu")
+        self.block_re = Human_Selection(prozess="neu")
+        self.addSearchfield(True)
 
         self.scrollGrid.addWidget(self.block_a, 1, 0)
         self.scrollGrid.addWidget(self.block_b, 2, 0)
@@ -189,7 +203,7 @@ class Editfield(ArvenWidget):
         self.scrollGrid.addWidget(self.block_e, 1, 1)
         self.scrollGrid.addWidget(self.block_f, 2, 1)
 
-        self.mapper_mdt = QDataWidgetMapper()
+        self.mapper_mdt = QDataWidgetMapper(self)
         self.mappermodel_mdt = MandantEditmodel('NULL')
 
         self.add_mapping()
@@ -200,27 +214,225 @@ class Editfield(ArvenWidget):
         self.scrollSpace.setWidget(self.scrollWidget)
         self.scrollSpace.setWidgetResizable(True)
 
+        ## signals fr check boxes and subwindows
+        self.block_c.GVcheck.stateChanged.connect(self.update_nat_person)
+        self.block_gv.tab1.block_a.ButtonAdd.clicked.connect(self.write_gv)
+        self.block_re.tab1.block_a.ButtonAdd.clicked.connect(self.write_re)
+        self.block_gv.tab2.uebernehmen.clicked.connect(self.add_gv)
+        self.block_re.tab2.uebernehmen.clicked.connect(self.add_re)
+
 
     def add_mapping(self):
         self.mapper_mdt.addMapping(self.block_a.NameMdt, 1)
         self.mapper_mdt.addMapping(self.block_a.MdtNr, 22)
         self.mapper_mdt.addMapping(self.block_a.MVP, 3)
+        self.mapper_mdt.addMapping(self.block_c.RE_display, 7)
         self.mapper_mdt.addMapping(self.block_b.Sitz1, 8)
         self.mapper_mdt.addMapping(self.block_b.Sitz2, 9)
         self.mapper_mdt.addMapping(self.block_b.Sitz3, 10)
         self.mapper_mdt.addMapping(self.block_b.Sitz4, 11)
         self.mapper_mdt.addMapping(self.block_b.Sitz5, 12)
-        self.mapper_mdt.addMapping(self.block_b.Sitz5, 13)
-        self.mapper_mdt.addMapping(self.block_c.GVPosition, 24)
+        self.mapper_mdt.addMapping(self.block_b.Sitz6, 13)
+        self.mapper_mdt.addMapping(self.block_c.GVPosition, 30)
         self.mapper_mdt.addMapping(self.block_c.GVdisplay, 6)
-        self.mapper_mdt.addMapping(self.block_c.elektr_rechnung, 25)
-        self.mapper_mdt.addMapping(self.block_e.GeldwaescheG, 20)
+        self.mapper_mdt.addMapping(self.block_c.elektr_rechnung, 24)
+        self.mapper_mdt.addMapping(self.block_f.Stundensatz1, 14)
+        self.mapper_mdt.addMapping(self.block_f.MVPAnteil, 21)
+        self.mapper_mdt.addMapping(self.block_f.SonstigesVerguetung, 16)
+        self.mapper_mdt.addMapping(self.block_e.GeldwaescheG, 19, b'text')
+        self.mapper_mdt.addMapping(self.block_e.KollisionMdt, 20, b'text')
 
     def refresh_data(self, indexMdt):
+        self.mandantid = indexMdt
         self.mappermodel_mdt = MandantEditmodel(indexMdt)
         self.mapper_mdt.setModel(self.mappermodel_mdt)
         self.add_mapping()
         self.mapper_mdt.toFirst()
+        self.InternalFileStatus()
+        self.AkquiseFileStatus()
+        self.natPersonStatus()
+        self.RVStatus()
+
+    def fill_gwg(self):
+        dlg = ComboDialog('Geldwäscheprüfung', 'Bitte Ergebnis der Prüfung nach Geldwäschegesetz auswählen', gwg)
+
+        if dlg.exec():
+            self.GeldwaescheGErg = dlg.combobox.currentText()
+            gwg_index = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 19)
+            self.mappermodel_mdt.setData(gwg_index, self.GeldwaescheGErg)
+
+    def fill_staat(self):
+        dlg = ComboDialog('Staat auswählen', 'Bitte den Staat des Sitzes auswählen', Staaten)
+
+
+        if dlg.exec():
+            self.block_b.sitz_staat = dlg.combobox.currentText()
+            staat_index = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 13)
+            self.mappermodel_mdt.setData(staat_index, self.block_b.sitz_staat)
+
+    def fill_koll(self):
+        dlg = ComboDialog('Kollisionsprüfung', 'Bitte Ergebnis der Kollisionsprüfung auswählen', kollisionspruefung)
+
+        if dlg.exec():
+            self.KollisionErg = dlg.combobox.currentText()
+            kol_index = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 20)
+            self.mappermodel_mdt.setData(kol_index, self.KollisionErg)
+
+    def eventFilter(self, obj, event):
+        if not self.block_a.NameMdt.isEnabled() == False:
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if self.block_e.KollisionMdt is obj:
+                    self.fill_koll()
+                elif self.block_e.GeldwaescheG is obj:
+                    self.fill_gwg()
+                elif self.block_b.Sitz6 is obj:
+                    self.fill_staat()
+
+        return QWidget.eventFilter(self, obj, event)
+
+    def addSearchfield(self, searchable: bool):
+
+        if searchable == True:
+
+            self.setDisabled(True)
+        elif searchable == False:
+            self.setDisabled(False)
+
+    def InternalFileStatus(self):
+        # function maps db-entry for "internal file" to checkbox;
+        # first line re initialization before mappermodel_mdt is set
+        if not self.mapper_mdt.model() is None:
+            InternalStatus = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 4).data(Qt.ItemDataRole.DisplayRole)
+
+            if InternalStatus == True:
+                self.block_a.Intern.setChecked(True)
+            else:
+                self.block_a.Intern.setChecked(False)
+
+    def AkquiseFileStatus(self):
+        # function maps db-entry for "akquise file" to checkbox;
+        # first line re initialization before mappermodel_mdt is set
+        if not self.mapper_mdt.model() is None:
+            akquiseStatus = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 5).data(Qt.ItemDataRole.DisplayRole)
+            if akquiseStatus == True:
+                self.block_a.Akquise.setChecked(True)
+            else:
+                self.block_a.Akquise.setChecked(False)
+
+    def InternalStatusChange(self):
+        # function checks if checkbox "intern" is checked and writes changes to db
+        # first line re initialization before mappermodel_mdt is set
+        InternalIndex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 4)
+
+        if self.block_a.Intern.isChecked():
+            self.mappermodel_mdt.setData(InternalIndex, True)
+        else:
+            self.mappermodel_mdt.setData(InternalIndex, False)
+
+    def akquiseStatusChange(self):
+        # function checks if checkbox "akquise" is checked and writes changes to db
+        # first line re initialization before mappermodel_mdt is set
+        akquiseIndex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 5)
+
+        if self.block_a.Akquise.isChecked():
+            self.mappermodel_mdt.setData(akquiseIndex, True)
+        else:
+            self.mappermodel_mdt.setData(akquiseIndex, False)
+
+
+    def natPersonStatus(self):
+        if not self.mapper_mdt.model() is None:
+            self.natPersonStatusdata = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 28).data(Qt.ItemDataRole.DisplayRole)
+
+            if self.natPersonStatusdata == True:
+                self.block_c.GVcheck.setChecked(True)
+            else:
+                self.block_c.GVcheck.setChecked(False)
+
+    def RVChange(self):
+        ## see internalstatuschange and akquiseStatuschange
+        RVIndex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 27)
+
+        if self.block_f.Rahmenvertrag.isChecked():
+            self.mappermodel_mdt.setData(RVIndex, True)
+        else:
+            self.mappermodel_mdt.setData(RVIndex, False)
+
+    def RVStatus(self):
+        # function maps db-entry for "Rahmenvertrag" to checkbox;
+        # first line re initialization before mappermodel_mdt is set
+        if not self.mapper_mdt.model() is None:
+            RVStatus = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 27).data(Qt.ItemDataRole.DisplayRole)
+
+            if RVStatus == True:
+                self.block_f.Rahmenvertrag.setChecked(True)
+            else:
+                self.block_f.Rahmenvertrag.setChecked(False)
+
+    def write_gv(self):
+        # write new person into humans
+        self.newperson = 0
+        self.block_gv.tab1.human_cleanup()
+
+        # find index of newest person
+        self.newperson = HumanSearch.result(HumanSearch())
+        self.refresh_data(self.mandantid)
+        # write newest person in mandanten as GV
+
+        if not self.newperson == 0:
+            gvindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 6)
+            self.mappermodel_mdt.setData(gvindex, self.newperson)
+
+            # cleanup and close adressbook
+            self.block_gv.tab1.clearinput()
+            self.block_gv.close()
+
+
+
+    def write_re(self):
+        self.newperson = 0
+        # write new person into humans
+        self.block_re.tab1.human_cleanup()
+
+        # find index of newest person
+        self.newperson = HumanSearch.result(HumanSearch())
+        self.refresh_data(self.mandantid)
+
+        # write newest person in mandanten as RE
+        if not self.newperson == 0:
+            REindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 7)
+            self.mappermodel_mdt.setData(REindex, self.newperson)
+
+            self.block_re.tab1.clearinput()
+            self.block_re.close()
+
+    def update_nat_person(self):
+        natPersonIndex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 28)
+
+        if self.block_c.GVcheck.isChecked():
+            self.mappermodel_mdt.setData(natPersonIndex, True)
+
+        elif not self.block_c.GVcheck.isChecked():
+            self.mappermodel_mdt.setData(natPersonIndex, False)
+
+    def add_gv(self):
+        entry = self.block_gv.tab2.NrHuman
+        print(entry)
+
+        gvindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 6)
+        self.mappermodel_mdt.setData(gvindex, entry)
+
+        # cleanup and close adressbook
+        self.block_gv.close()
+
+
+    def add_re(self):
+        entry = self.block_re.tab2.NrHuman
+        reindex = self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 7)
+        self.mappermodel_mdt.setData(reindex, entry)
+
+        # cleanup and close adressbook
+        self.block_re.close()
 
 
 
@@ -285,8 +497,8 @@ class Sitz(QWidget):
         self.Sitz5 = InputArve("Bundesland")
         completer = QCompleter(Bundeslaender, self)
         self.Sitz5.setCompleter(completer)
-        self.Sitz6 = ComboArve("Staat")
-        self.Sitz6.addItems(Staaten)
+        self.Sitz6 = InputArve("Staat")
+        self.sitz_staat = ''
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
         self.HBox = QHBoxLayout()
@@ -310,41 +522,35 @@ class GesVertretung(QWidget):
 
         self.GVlabel = ArveLabel("header", "Gesetzliche Vertretung des Mandanten")
         self.GVdisplay = InputArve("Gesetzlicher Vertreter")
-        self.GVblind = InputArve('')
 
         self.GVdisplay.setReadOnly(True)
         self.GVPosition = InputArve("Position des gesetzlichen Vertreters")
         completer = QCompleter(Positionen, self)
         self.GVPosition.setCompleter(completer)
         self.GVcheck = ArveCheck("Mandant ist natürliche Person", False)
-        #self.GVcheck.stateChanged.connect(self.nat_person)
-        self.AddToAdressBook = ArvenButton("Adressbuch")
+
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
 
         self.GVVBox = QVBoxLayout(self)
 
         self.GVVBox.addWidget(self.GVlabel)
-        self.GVVBox.addWidget(self.GVcheck)
         self.GVVBox.addWidget(self.GVPosition)
         self.GVVBox.addWidget(self.GVdisplay)
-        self.GVVBox.addWidget(self.AddToAdressBook)
 
-        self.REcheck = ArveCheck("Persönlicher Rechnungsempfänger", True)
+
         self.RE_display = InputArve("Rechnungsempfänger")
         self.RE_display.setReadOnly(True)
-        self.RE_blind = QComboBox()
-        self.REE_AddToAdressBook = ArvenButton("Adressbuch")
+
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
 
-        self.elektr_rechnung_check = ArveCheck("Elektronische Rechnung", False)
+
         self.elektr_rechnung = InputArve("Email-Adresse für Rechnung")
 
-        self.GVVBox.addWidget(self.REcheck)
+
         self.GVVBox.addWidget(self.RE_display)
-        self.GVVBox.addWidget(self.REE_AddToAdressBook)
-        self.GVVBox.addWidget(self.elektr_rechnung_check)
+
         self.GVVBox.addWidget(self.elektr_rechnung)
         self.GVVBox.addSpacerItem(self.spacerV)
 
@@ -354,14 +560,13 @@ class Berufsrecht(QWidget):
         self.BerufsrechtLabel = ArveLabel("header", "Berufsrechtliche Sorgfalt")
         self.KollisionMdt = InputArve("Mandantenbezogene Kollision")
         self.KollisionMdt.setReadOnly(True)
+        self.Kollision_hidden = InputArve('')
         self.KollisionMdt.installEventFilter(self)
         self.KollisionErg = ''
         self.GeldwaescheG = InputArve("Geldwäschegesetz")
         self.GeldwaescheG.setReadOnly(True)
         self.GeldwaescheG.installEventFilter(self)
         self.GeldwaescheGErg = ''
-        #self.Drittwirkung = ComboArve("Schutzwirkung zugunsten Dritter (Konzernunternehmen)")
-        #self.installEventFilter(self)
         self.VBox = QVBoxLayout(self)
 
         self.VBox.addWidget(self.BerufsrechtLabel)
@@ -371,31 +576,6 @@ class Berufsrecht(QWidget):
         self.spacerV = QSpacerItem(10, 10, hPolicy=QSizePolicy.Policy.Minimum,
                                    vPolicy=QSizePolicy.Policy.Expanding)
         self.VBox.addSpacerItem(self.spacerV)
-
-
-    def fill_gwg(self):
-        dlg = ComboDialog('Geldwäscheprüfung', 'Bitte Ergebnis der Prüfung nach Geldwäschegesetz auswählen', gwg)
-
-        if dlg.exec():
-            self.GeldwaescheGErg = dlg.combobox.currentText()
-            self.GeldwaescheG.setText(self.GeldwaescheGErg)
-
-    def fill_koll(self):
-        dlg = ComboDialog('Kollisionsprüfung', 'Bitte Ergebnis der Kollisionsprüfung auswählen', kollisionspruefung)
-
-        if dlg.exec():
-            self.KollisionErg = dlg.combobox.currentText()
-            self.KollisionMdt.setText(self.KollisionErg)
-
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.MouseButtonPress:
-            if self.KollisionMdt is obj:
-                self.fill_koll()
-            elif self.GeldwaescheG is obj:
-                self.fill_gwg()
-
-        return QWidget.eventFilter(self, obj, event)
-
 
 
 class Abrechnung(QWidget):

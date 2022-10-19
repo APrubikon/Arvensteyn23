@@ -284,6 +284,7 @@ class ArvenDialog(QDialog):
 
         self.layout = QVBoxLayout()
         message = QLabel(warning)
+        message.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
@@ -323,3 +324,15 @@ class HLine(QFrame):
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
 
+class InfoDialog(QDialog):
+    def __init__(self, title:str, warning:str):
+        super(InfoDialog, self).__init__()
+        self.setWindowTitle(title)
+
+        self.setStyleSheet("background-color: white; color: rgb(9, 58, 112);")
+
+        self.layout = QVBoxLayout()
+        message = QLabel(warning)
+
+        self.layout.addWidget(message)
+        self.setLayout(self.layout)

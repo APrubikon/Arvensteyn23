@@ -1,7 +1,7 @@
 from src.MainLayout import *
 from PyQt6.QtCore import QEvent
 import PyQt6.QtSql
-
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
                              QHBoxLayout,
                              QVBoxLayout,
@@ -18,11 +18,12 @@ from PyQt6.QtWidgets import (
 
 from src.InputHumans import Human, Human_Selection
 from src.EditMdt import GrundDaten, Sitz, GesVertretung, Berufsrecht, Abrechnung # Options
-from src.data import MandantEditmodel, MVP, HumanSearch
+from src.data import MandantEditmodel, MVP, HumanSearch, DBModelAuftraege
 from src.variables import Jahr
 
 
 class New_Mandant(ArvenWidget):
+    getmehome = pyqtSignal()
     def __init__(self):
         super(New_Mandant, self).__init__('not')
         self.mainLayout = QHBoxLayout()
@@ -134,9 +135,14 @@ class New_Mandant(ArvenWidget):
 
         MandantModel = MandantEditmodel()
         MdtNr = MandantModel.addnew(new_mandant)
+        DBModelAuftraege.allgemeine_beratung(DBModelAuftraege(), MdtNr, Jahr)
         if not MdtNr is None:
-            dlg = ArvenDialog("Neuer Mandant erfolgreich angelegt", f"""Neuer Mandant {self.block_a.NameMdt.text()} hat die Mandantennummer {MdtNr}.""")
-            dlg.exec()
+            dlg = ArvenDialog("Neuer Mandant erfolgreich angelegt", f"""Neuer Mandant {self.block_a.NameMdt.text()} hat die Mandantennummer {MdtNr}.\n\n
+                                Akte 'Allgemeine Beratung' wurde angelegt.""")
+
+
+            if dlg.exec():
+                self.getmehome.emit()
 
         else:
             dlg = ArvenDialog("Fehler", f"""Neuer Mandant {self.block_a.NameMdt.text()} konnte nicht eingetragen werden. \n\n

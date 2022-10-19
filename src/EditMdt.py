@@ -1,4 +1,4 @@
-from src.data import DBModelMdt, MandantEditmodel, MandantListe, GV_model, REE_model, HumanSearch
+from src.data import DBModelMdt, MandantEditmodel, MandantListe, HumanSearch
 from src.MainLayout import *
 from PyQt6.QtCore import QEvent, QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
@@ -317,7 +317,7 @@ class EditMdt(ArvenWidget):
         # write newest person in mandanten as GV
         self.mappermodel_mdt.setData(self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 6), newperson)
 
-         # refresh models and mappers
+
         self.set_models()
         self.set_extra_models()
 
@@ -367,6 +367,7 @@ class EditMdt(ArvenWidget):
                     if self.mappermodel_mdt.setData(self.mappermodel_mdt.index(self.mapper_mdt.currentIndex(), 7),
                                                     None):
                         self.set_extra_models()
+                        self.block_c.RE_display.clear()
                         self.block_c.RE_display.clear()
 
     def elektr_RE(self):

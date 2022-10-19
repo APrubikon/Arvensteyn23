@@ -72,11 +72,9 @@ class MandantListe(QSqlQueryModel):
         self.setQuery(query)
 
     def filter_by_name(self, input_name):
-        query = f"""select arvensteyn_dev22.mandanten.name, arvensteyn_dev22.mandanten.mandantid FROM arvensteyn_dev22.mandanten WHERE arvensteyn_dev22.mandanten.name ILIKE '%{input_name}%' 
+        query = f"""select arvensteyn_dev22.mandanten.name, arvensteyn_dev22.mandanten.mandantid, arvensteyn_dev22.mandanten.mdt_id_lz FROM arvensteyn_dev22.mandanten WHERE arvensteyn_dev22.mandanten.name ILIKE '%{input_name}%' 
         ORDER BY arvensteyn_dev22.mandanten.name ASC"""
         self.setQuery(query)
-        while self.query().next():
-            print(self.query().value(0))
         print(self.lastError().text())
 
 
@@ -89,15 +87,13 @@ class MandantEditmodel(QSqlRelationalTableModel):
         self.setJoinMode(QSqlRelationalTableModel.JoinMode.LeftJoin)
         self.setRelation(3, QSqlRelation("arvensteyn_dev22.partner", "partnerid", "name"))
         self.setRelation(6, QSqlRelation("arvensteyn_dev22.humans", 'index', 'full_name'))
+        self.setRelation(7, QSqlRelation("arvensteyn_dev22.humans", 'index', 'full_name'))
         filter = (f"""arvensteyn_dev22.mandanten.mandantid = {mandantid}""")
         self.setFilter(filter)
         self.select()
         print(self.lastError().text())
 
-    def update_re(self, newperson):
-        query = QSqlQuery(f"""Update arvensteyn_dev22.mandanten SET rechnungsempfaenger = {newperson}""")
-        if not self.setQuery(query):
-            print(self.lastError().text())
+
 
     def addnew(self, new_mandant:dict):
         stundensatz1 = None
@@ -151,33 +147,6 @@ class MandantEditmodel(QSqlRelationalTableModel):
             return val
 
 
-
-class GV_model(QSqlTableModel):
-    def __init__(self, gv_index ='NULL'):
-        super(GV_model, self).__init__()
-
-        self.setTable("arvensteyn_dev22.humans")
-        self.setEditStrategy(QSqlRelationalTableModel.EditStrategy.OnFieldChange)
-
-        filter = (f"""arvensteyn_dev22.humans.index = {gv_index}""")
-        self.setFilter(filter)
-        self.select()
-
-        print(self.lastError().text())
-
-
-class REE_model(QSqlTableModel):
-    def __init__(self, re_index ='NULL'):
-        super(REE_model, self).__init__()
-
-        self.setTable("arvensteyn_dev22.humans")
-        self.setEditStrategy(QSqlRelationalTableModel.EditStrategy.OnFieldChange)
-        self.setSort(1, Qt.SortOrder.AscendingOrder)
-        filter = (f"""arvensteyn_dev22.humans.index = {re_index}""")
-        self.setFilter(filter)
-        self.select()
-
-        print(self.lastError().text())
 
 class HumanSearch(QSqlQueryModel):
     def __init__(self):
@@ -257,6 +226,24 @@ class DBModelAuftraege(QSqlRelationalTableModel):
 
         self.select()
 
+    def allgemeine_beratung(self, mandantid = None, Anlagejahr:int = None):
+        self.select()
+        allg_beratung = self.record()
+
+        allg_beratung.setGenerated(0, False)
+        allg_beratung.setValue(1, mandantid)
+        allg_beratung.setValue(2, Anlagejahr)
+        allg_beratung.setValue(3, 1)
+        allg_beratung.setValue(5, "Allgemeine Beratung")
+
+        if not self.insertRecord(-1, allg_beratung):
+            print(self.lastError().text())
+
+
+
+
+
+
 
         
 
@@ -291,6 +278,24 @@ class AuftragsauswahlNr(QSqlQueryModel):
                           INNER JOIN arvensteyn_dev22.mandanten ON arvensteyn_dev22.mandanten.mandantid =        
                           arvensteyn_dev22.auftraege.mdt AND arvensteyn_dev22.mandanten.mdt_id_lz = '{MdtNr}'""")
         self.setQuery(query)
+
+class Auftragnummer(QSqlQueryModel):
+    def __init__(self, MdtNr):
+        super(Auftragnummer, self).__init__()
+
+        self.query = QSqlQuery(f"""Select MAX(auftragnummer_int), MAX(auftragsjahr) 
+        FROM arvensteyn_dev22.auftraege WHERE mdt = {MdtNr}""")
+
+        self.setQuery(self.query)
+        self.query.next()
+
+    def max_auftragsjahr(self):
+        return self.query.value(1)
+
+    def max_auftrag(self):
+        return self.query.value(0)
+
+
 
 class Gerichte(QSqlTableModel):
     def __init__(self):
